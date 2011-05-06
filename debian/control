@@ -1,0 +1,12 @@
+Source: jinx-2-api-linden
+Section: unknown
+Priority: extra
+Maintainer: Lex Linden <lex@lindenlab.com>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: jinx-2-api-linden
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>

@@ -1,0 +1,6 @@
+jinx-2-api-linden (0.1) unstable; urgency=low
+
+  * Added skeleton Debian package structure.
+
+ -- Lex Linden <lex@lindenlab.com>  Fri,  6 May 2011 08:36:59 -0700
+
