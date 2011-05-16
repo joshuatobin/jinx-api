@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: jinx-2-api-linden
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python-django, clusto, python-llclusto-linden, python-simplejson
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-django, clusto, python-llclusto-linden (>= 1.0), python-simplejson
 Description: a django web service providing an API for Jinx
  This package provides the code for a django web service that provides access to
  the data stored in Jinx, which uses Clusto.

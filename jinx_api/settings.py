@@ -1,5 +1,11 @@
 # Django settings for jinx_api project.
 
+# Initialize clusto first:
+import clusto.scripthelpers
+
+clusto.scripthelpers.init_script()
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -75,6 +81,9 @@ MIDDLEWARE_CLASSES = (
 #    'django.middleware.csrf.CsrfViewMiddleware',
 #    'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.contrib.messages.middleware.MessageMiddleware',
+    'jinx_api.middleware.APIDocumentationMiddleware',
+    'jinx_api.middleware.JinxAuthorizationMiddleware',
+    'jinx_api.middleware.JSONMiddleware',
 )
 
 ROOT_URLCONF = 'jinx_api.urls'
@@ -86,7 +95,7 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
-    jinx_api.api,
+    'jinx_api.api',
 #    'django.contrib.auth',
 #    'django.contrib.contenttypes',
 #    'django.contrib.sessions',
