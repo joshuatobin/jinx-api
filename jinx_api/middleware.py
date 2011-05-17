@@ -61,6 +61,9 @@ class APIDocumentationMiddleware(object):
             
             args, varargs, varkwargs, defaults = inspect.getargspec(view)
             
+            # Strip off the first parameter, which is the request object
+            args = args[1:]
+            
             signature = view.__name__
             
             # Defaults are kind of hairy.  inspect fills the defaults list in with
@@ -134,7 +137,10 @@ class JSONMiddleware(object):
             
         json_data = request.raw_post_data
         
-        json_args = simplejson.loads(json_data)
+        try:
+            json_args = simplejson.loads(json_data)
+        except simplejson.JSONDecodeError, e:
+            return HttpResponse('Request body could not be parsed as a JSON object: %s' % str(e), status=415)
         
         if type(json_args) != list:
             return HttpResponseBadRequest('Expected a list of arguments; got %s' % str(type(json_args)))
@@ -155,8 +161,8 @@ class JSONMiddleware(object):
         except:
             exception_traceback = traceback.format_exception(*sys.exc_info())
             
-            print >> sys.stderr, "Unhandled exception from view:"
-            print >> sys.stderr, exception_traceback
+            #print >> sys.stderr, "Unhandled exception from view:"
+            #print >> sys.stderr, exception_traceback
             
             response = HttpResponseServerError(exception_traceback, mimetype='text/plain')
             response['X-Jinx-Error-Source'] = 'api'
