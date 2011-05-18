@@ -1,5 +1,5 @@
 #!/bin/sh
-# postrm script for jinx-2-api-linden
+# postrm script for jinx-api-linden
 #
 # Delete this file if you don't need it.
 #

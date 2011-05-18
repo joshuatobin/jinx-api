@@ -1,5 +1,5 @@
 #!/bin/sh
-# prerm script for jinx-2-api-linden
+# prerm script for jinx-api-linden
 #
 # Delete this file if you don't need it.
 #

@@ -1,6 +1,11 @@
-jinx-2-api-linden (0.1) unstable; urgency=low
+jinx-api-linden (0.1+nmu1) unstable; urgency=low
 
-  * Added skeleton Debian package structure.
+  * Debianizing jinx-api-linden
+ -- Joshua Tobin <joshua@lindenlab.com>  Wed, 18 May 2011 14:25:59 -0700
+
+jinx-api-linden (0.1) unstable; urgency=low
+
+  * New Upstream Release.
 
  -- Lex Linden <lex@lindenlab.com>  Fri,  6 May 2011 08:36:59 -0700
 
