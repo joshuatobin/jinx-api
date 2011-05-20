@@ -88,7 +88,7 @@ class APIDocumentationMiddleware(object):
             
             docstring = trim_docstring(view.__doc__)
             
-            return HttpResponse(signature + "\n" + docstring)
+            return HttpResponse(signature + "\n" + docstring, mimetype='text/plain')
             
 
 class JSONMiddleware(object):
