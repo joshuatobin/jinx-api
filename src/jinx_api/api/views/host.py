@@ -52,6 +52,7 @@ def get_host_remote_hands_info(request, hostname_or_mac):
      "rack":            "c2-02-01",
      "positions",       [10, 11, 12],
      "serial_number":   "SM123456",
+     "colo":            "PHX",
      "pdu_connections": [{"pdu":  "pdu1-c2-02-01.dfw.lindenlab.com", 
                           "port": 13},
                          {"pdu":  "pdu2-c2-02-01.dfw.lidnenlab.com",
@@ -126,7 +127,11 @@ def get_host_remote_hands_info(request, hostname_or_mac):
     except AttributeError:
         info['serial_number'] = None
     
-    
+    try:
+        info['colo'] = host.parents()[0].parents()[0].name.upper()
+    except AtrributeError:
+        info['colo'] = None
+        
     location = llclusto.drivers.LindenRack.get_rack_and_u(host)
     
     # Try the chassis instead

@@ -49,6 +49,7 @@ class TestGetRemoteHandsInfo(JinxTestCase):
                                          'hostname': 'hostname1.lindenlab.com',
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
+                                         'colo': None,
                                          'rack': None})
 
         response = self.do_api_call("aa:bb:cc:11:22:33")
@@ -58,6 +59,7 @@ class TestGetRemoteHandsInfo(JinxTestCase):
                                          'hostname': 'hostname1.lindenlab.com',
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
+                                         'colo': None,
                                          'rack': None})
 
         response = self.do_api_call("aa:bb:cc:11:22:34")
@@ -67,6 +69,7 @@ class TestGetRemoteHandsInfo(JinxTestCase):
                                          'hostname': 'hostname1.lindenlab.com',
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
+                                         'colo': None,
                                          'rack': None})
 
     def test_bad_call(self):

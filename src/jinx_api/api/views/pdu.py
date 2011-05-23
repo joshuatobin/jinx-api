@@ -1,7 +1,7 @@
 import clusto
 import llclusto
 
-def get_linden_pdus(request):
+def get_pdu_hostnames(request):
     """Returns a list of hostnames for all hosts with a driver of LindenPDU.
     """
 

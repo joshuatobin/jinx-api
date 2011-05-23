@@ -4,7 +4,7 @@ api_calls = patterns('api.views',
     (r'get_rack_contents', 'rack.get_rack_contents'),
     (r'get_hosts_by_regex', 'host.get_hosts_by_regex'),
     (r'get_host_remote_hands_info', 'host.get_host_remote_hands_info'),
-    (r'get_linden_pdus', 'pdu.get_linden_pdus'),
+    (r'get_pdu_hostnames', 'pdu.get_pdu_hostnames'),
 )
 
 urlpatterns = patterns('api.views',
