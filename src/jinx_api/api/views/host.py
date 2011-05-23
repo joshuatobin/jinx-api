@@ -129,7 +129,7 @@ def get_host_remote_hands_info(request, hostname_or_mac):
     
     try:
         info['colo'] = host.parents()[0].parents()[0].name.upper()
-    except AtrributeError:
+    except (AttributeError, IndexError):
         info['colo'] = None
         
     location = llclusto.drivers.LindenRack.get_rack_and_u(host)
