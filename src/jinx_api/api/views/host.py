@@ -128,8 +128,8 @@ def get_host_remote_hands_info(request, hostname_or_mac):
         info['serial_number'] = None
     
     try:
-        info['colo'] = host.parents()[0].parents()[0].name.upper()
-    except (AttributeError, IndexError):
+        info['colo'] =  host.parents(clusto_types=["datacenter"], search_parents=True)[0].name.upper()
+    except IndexError:
         info['colo'] = None
         
     location = llclusto.drivers.LindenRack.get_rack_and_u(host)

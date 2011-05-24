@@ -1,6 +1,6 @@
 from api.tests.base import JinxTestCase
 import clusto
-from llclusto.drivers import Class5Server, ServerClass
+from llclusto.drivers import Class5Server, ServerClass, LindenDatacenter, LindenRack, Class7Server, Class7Chassis
 import sys
 
 class TestGetHostsByRegex(JinxTestCase):
@@ -41,36 +41,68 @@ class TestGetRemoteHandsInfo(JinxTestCase):
         h1.set_port_attr("nic-eth", 1, "mac", "aa:bb:cc:11:22:33")
         h1.set_port_attr("nic-eth", 2, "mac", "aa:bb:cc:11:22:34")
 
+        dfw = LindenDatacenter("DFW", "1234 Anywhere", "123 Anywhere street", "remotehands@remote.com")
+        phx = LindenDatacenter("PHX", "1234 Anywhere", "123 Anywhere street", "remotehands@remote.com")
+
+        rack1 = LindenRack("c1.01.1000")
+        rack2 = LindenRack("c3.03.2000")
+
+        dfw.insert(rack1)
+        phx.insert(rack2)
+
+        ServerClass("Class 7")
+        chassis = Class7Chassis()
+        rack1.insert(chassis, [1, 2])
+        class7 = Class7Server("hostname2.lindenlab.com")
+        class7.serial_number = "SM55880"
+        class7.set_port_attr("nic-eth", 1, "mac", "aa:bb:cc:11:22:96")
+        class7.set_port_attr("nic-eth", 2, "mac", "aa:bb:cc:11:22:97")
+
+        chassis.insert(class7)
+        
+        rack2.insert(h1, 1)
+
+
     def test_normal_call(self):
         response = self.do_api_call("hostname1.lindenlab.com")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, {'macs': ['aa:bb:cc:11:22:33', 'aa:bb:cc:11:22:34'],
-                                         'positions': None, 
+                                         'positions': [1], 
                                          'hostname': 'hostname1.lindenlab.com',
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
-                                         'colo': None,
-                                         'rack': None})
+                                         'colo': 'PHX',
+                                         'rack': "c3.03.2000"})
 
         response = self.do_api_call("aa:bb:cc:11:22:33")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, {'macs': ['aa:bb:cc:11:22:33', 'aa:bb:cc:11:22:34'],
-                                         'positions': None,
+                                         'positions': [1],
                                          'hostname': 'hostname1.lindenlab.com',
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
-                                         'colo': None,
-                                         'rack': None})
+                                         'colo': 'PHX',
+                                         'rack': "c3.03.2000"})
 
         response = self.do_api_call("aa:bb:cc:11:22:34")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, {'macs': ['aa:bb:cc:11:22:33', 'aa:bb:cc:11:22:34'],
-                                         'positions': None,
+                                         'positions': [1],
                                          'hostname': 'hostname1.lindenlab.com',
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
-                                         'colo': None,
-                                         'rack': None})
+                                         'colo': 'PHX',
+                                         'rack': "c3.03.2000"})
+
+        response = self.do_api_call("hostname2.lindenlab.com")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, {'macs': ['aa:bb:cc:11:22:96', 'aa:bb:cc:11:22:97'],
+                                         'positions': [1, 2],
+                                         'hostname': 'hostname2.lindenlab.com',
+                                         'pdu_connections': [],
+                                         'serial_number': 'SM55880',
+                                         'colo': 'DFW',
+                                         'rack': "c1.01.1000"})
 
     def test_bad_call(self):
         response = self.do_api_call("huh?")
