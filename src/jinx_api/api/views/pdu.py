@@ -61,9 +61,9 @@ def power_status(request, host_or_mac):
     if host.has_ipmi():
         return host.ipmi_power_status()
     else:
-        return HttpResponse('%s is not IPMI enabled. Power status is not available...', status=409 % host.hostname)
+        return HttpResponse('%s is not IPMI enabled. Power status is not available...' % host.hostname, status=409)
 
-def get_host_mac_object(request, hostname_or_mac):
+def get_host_or_mac_object(request, hostname_or_mac):
     """ Returns an object for a hostname or a mac address...
 
     Arguments:
