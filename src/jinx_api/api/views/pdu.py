@@ -11,7 +11,29 @@ def get_pdu_hostnames(request):
     
     return [pdu.hostname for pdu in pdus if pdu.hostname.lower() != 'missing']
 
-def power_reboot(request, host_or_mac):
+def get_host_or_mac_object(request, hostname_or_mac):
+    """ Returns an object for a hostname or a mac address...
+
+    Arguments:
+        hostname_or_mac -- The hostname or mac address of an entity.
+
+    """
+    hosts = None
+
+    if re.match(r'[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}', hostname_or_mac, re.I):
+        hosts = clusto.get_by_mac(hostname_or_mac)
+
+    if not hosts:
+        hosts = llclusto.get_by_hostname(hostname_or_mac)
+
+    if not hosts:
+        return HttpResponseNotFound('No host was found with hostname or MAC address "%s".' % hostname_or_mac)
+    elif len(hosts) > 1:
+        return HttpResponse('More than one host found with hostname or MAC address "%s".' % hostname_or_mac, status=409)
+    else:
+        return hosts[0]
+
+def power_cycle(request, host_or_mac):
     """
     """
     host = get_host_or_mac_object(request, host_or_mac)
@@ -63,27 +85,6 @@ def power_status(request, host_or_mac):
     else:
         return HttpResponse('%s is not IPMI enabled. Power status is not available...' % host.hostname, status=409)
 
-def get_host_or_mac_object(request, hostname_or_mac):
-    """ Returns an object for a hostname or a mac address...
-
-    Arguments:
-        hostname_or_mac -- The hostname or mac address of an entity.
-
-    """
-    hosts = None
-
-    if re.match(r'[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}', hostname_or_mac, re.I):
-        hosts = clusto.get_by_mac(hostname_or_mac)
-
-    if not hosts:
-        hosts = llclusto.get_by_hostname(hostname_or_mac)
-
-    if not hosts:
-        return HttpResponseNotFound('No host was found with hostname or MAC address "%s".' % hostname_or_mac)
-    elif len(hosts) > 1:
-        return HttpResponse('More than one host found with hostname or MAC address "%s".' % hostname_or_mac, status=409)
-    else:
-        return hosts[0]
     
 
 
