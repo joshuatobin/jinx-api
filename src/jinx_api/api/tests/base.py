@@ -53,7 +53,7 @@ class JinxTestCase(TestCase):
         
         if response.status_code == 200:
             self.assertEqual(response['Content-Type'], "application/json", 
-                "API call %s(%s) did not return application/json" % (self.api_call_path, ", ".join(args)))
+                "API call %s(%s) returned type %s instead of application/json" % (self.api_call_path, str(args), response['Content-Type']))
                 
             response.data = simplejson.loads(response.content)
         else:
