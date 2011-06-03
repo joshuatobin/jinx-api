@@ -3,7 +3,14 @@ from django.conf.urls.defaults import *
 api_calls = patterns('api.views',
     (r'get_rack_contents', 'rack.get_rack_contents'),
     (r'get_hosts_by_regex', 'host.get_hosts_by_regex'),
+    
     (r'get_host_remote_hands_info', 'host.get_host_remote_hands_info'),
+    (r'get_host_state', 'host.get_host_state'),
+    (r'set_host_state', 'host.set_host_state'),
+    (r'get_hosts_in_state', 'host.get_hosts_in_state'),
+    (r'list_host_states', 'host.list_host_states'),
+    (r'add_host_state', 'host.add_host_state'),
+    
     (r'get_pdu_hostnames', 'pdu.get_pdu_hostnames'),
 )
 

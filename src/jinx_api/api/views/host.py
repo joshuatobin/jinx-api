@@ -1,7 +1,8 @@
 import clusto
 import llclusto
 import re
-from django.http import HttpResponseBadRequest, HttpResponseNotFound
+from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpResponseBadRequest
+from jinx_api.http import HttpResponseInvalidState
 import traceback
 
 def get_hosts_by_regex(request, regex, flags=re.I):
@@ -149,3 +150,102 @@ def get_host_remote_hands_info(request, hostname_or_mac):
         info['positions'] = None
     
     return info
+    
+def get_host_state(request, hostname):
+    """Gets the state of a host.
+    
+    Returns:
+        The host's state, as a string.  If the host has no state set, returns None.
+        
+    Arguments:
+        hostname -- The name of the host whose state will be retrieved.
+        
+    Exceptions Raised:
+        JinxDataNotFoundError -- A host with the specified hostname was not found.
+    """
+    
+    try:
+        host = llclusto.get_by_hostname(hostname)[0]
+        return host.state
+    except IndexError:
+        return HttpResponseNotFound("Host %s not found." % hostname)
+    
+def set_host_state(request, hostname, state):
+    """Sets the state of a host.  
+    
+    Returns:
+        None
+        
+    Arguments:
+        hostname -- The name of the host whose state will be retrieved.
+        state -- The state to set which to set the host.  This state must already exist (see list_states()).
+    
+    Exceptions Raised:
+        JinxDataNotFoundError -- A host with the specified hostname was not found.
+        JinxInvalidStateError -- The specified state does not exist.  Please see list_states() for a list of valid states.
+    """
+    
+    try:
+        host = llclusto.get_by_hostname(hostname)[0]
+        
+        if state is None:
+            del host.state
+        else:
+            host.state = state
+    except IndexError:
+        return HttpResponseNotFound("Host %s not found." % hostname)
+    except ValueError:
+        return HttpResponseInvalidState("State %s does not exist." % state)
+    
+def get_hosts_in_state(request, state):
+    """Gets a list of all hosts in the specified state.
+    
+    Returns:
+        A list of hostnames.
+        
+    Arguments:
+        state -- The name of the state.
+    
+    Exceptions Raised:
+        JinxInvalidStateError -- The specified state does not exist.  Please see list_states() for a list of valid states.
+    """
+    try:
+        state = clusto.get_entities(names=[state], clusto_drivers=[llclusto.drivers.HostState])[0]
+        return [host.hostname for host in state]
+    except IndexError:
+        return HttpResponseInvalidState("State %s does not exist." % state)
+    
+def list_host_states(request):
+    """Gets a list of all defined host states.
+    
+    Returns:
+        A list of host state names as strings.
+    """
+    
+    states = clusto.get_entities(clusto_drivers=[llclusto.drivers.HostState])
+    
+    return [state.name for state in states]
+    
+def add_host_state(request, state):
+    """Adds a new host state.
+    
+    Returns:
+        None
+        
+    Arguments:
+        state -- The name of the new state.  Only letters, numbers, spaces, and underscores are allowed.
+        
+    Exceptions Raised:
+        JinxBadRequestError -- The name of the state is invalid.
+        JinxInvalidStateError -- The specified state already exists.
+    """
+    
+    if not re.match(r'^[a-zA-z0-9_ ]*$', state):
+        return HttpResponseBadRequest("State names may only contain letters, numbers, underscores, and spaces.")
+    
+    try:
+        llclusto.drivers.HostState(state)
+        return None
+    except clusto.exceptions.NameException:
+        return HttpResponseInvalidState("A state named '%s' already exists." % state, status=409)
+
