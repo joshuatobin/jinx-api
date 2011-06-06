@@ -1,3 +1,9 @@
+jinx-api-linden (0.4) unstable; urgency=low
+
+  * Adding power management methods to pdu.py 
+
+ -- Joshua Tobin <joshua@lindenlab.com>  Mon, 06 Jun 2011 10:39:16 -0700
+
 jinx-api-linden (0.3) unstable; urgency=low
 
   * Adding get_linden_pdus() method.

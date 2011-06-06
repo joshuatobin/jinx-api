@@ -12,6 +12,10 @@ api_calls = patterns('api.views',
     (r'add_host_state', 'host.add_host_state'),
     
     (r'get_pdu_hostnames', 'pdu.get_pdu_hostnames'),
+    (r'power_cycle', 'pdu.power_cycle'),
+    (r'power_on', 'pdu.power_on'),
+    (r'power_off', 'pdu.power_off'),
+    (r'power_status', 'pdu.power_status'),
 )
 
 urlpatterns = patterns('api.views',
