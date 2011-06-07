@@ -1,9 +1,11 @@
 import simplejson
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed
+from jinx_api.http import HttpResponseUnsupportedMediaType
 import functools
 import traceback
 import sys
 import inspect
+
 
 def trim_docstring(docstring):
     """ Trim a docstring.
@@ -130,17 +132,17 @@ class JSONMiddleware(object):
         method = request.META['REQUEST_METHOD']
         
         if method != 'POST':
-            return HttpResponse('The Jinx API requires a POST', status=405)
+            return HttpResponseNotAllowed('The Jinx API requires a POST')
             
         if content_type != "application/json":
-            return HttpResponse('The Jinx API requires a request with Content-Type: application/json', status=415)
+            return HttpResponseUnsupportedMediaType('The Jinx API requires a request with Content-Type: application/json')
             
         json_data = request.raw_post_data
         
         try:
             json_args = simplejson.loads(json_data)
         except simplejson.JSONDecodeError, e:
-            return HttpResponse('Request body could not be parsed as a JSON object: %s' % str(e), status=415)
+            return HttpResponseUnsupportedMediaType('Request body could not be parsed as a JSON object: %s' % str(e))
         
         if type(json_args) != list:
             return HttpResponseBadRequest('Expected a list of arguments; got %s' % str(type(json_args)))

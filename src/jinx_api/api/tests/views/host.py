@@ -1,6 +1,7 @@
 from api.tests.base import JinxTestCase
 import clusto
-from llclusto.drivers import Class5Server, ServerClass, LindenDatacenter, LindenRack, Class7Server, Class7Chassis
+import llclusto
+from llclusto.drivers import Class5Server, ServerClass, LindenDatacenter, LindenRack, Class7Server, Class7Chassis, HostState
 import sys
 
 class TestGetHostsByRegex(JinxTestCase):
@@ -110,3 +111,160 @@ class TestGetRemoteHandsInfo(JinxTestCase):
         
         response = self.do_api_call("huh?", 2)
         self.assert_response_code(response, 400)
+        
+class TestGetHostState(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_host_state"
+    
+    def data(self):
+        ServerClass("Class 5")
+        server1 = Class5Server("test1.lindenlab.com")
+        server2 = Class5Server("test2.lindenlab.com")
+        HostState("up")
+        server1.state = "up"
+        
+    def test_get_host_state(self):
+        response = self.do_api_call("test1.lindenlab.com")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, "up")
+    
+    def test_no_state(self):
+        response = self.do_api_call("test2.lindenlab.com")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, None)
+    
+    def test_nonexistent_host(self):
+        response = self.do_api_call("test3.lindenlab.com")
+        self.assert_response_code(response, 404)
+        
+class TestSetHostState(JinxTestCase):
+    api_call_path = "/jinx/2.0/set_host_state"
+    
+    def data(self):
+        ServerClass("Class 5")
+        self.server1 = Class5Server("test1.lindenlab.com")
+        HostState("up")
+        HostState("down")
+
+    def test_set_host_state(self):
+        response = self.do_api_call("test1.lindenlab.com", "up")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, None)
+        self.assertEqual(self.server1.state, "up")
+        
+        state_up = clusto.get_by_name("up")
+        self.assertTrue(self.server1 in state_up)
+        
+        response = self.do_api_call("test1.lindenlab.com", "down")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, None)
+        self.assertEqual(self.server1.state, "down")
+        
+        state_down = clusto.get_by_name("down")
+        
+        self.assertTrue(self.server1 not in state_up)
+        self.assertTrue(self.server1 in state_down)
+    
+    def test_nonexistent_host(self):
+        response = self.do_api_call("test3.lindenlab.com", "up")
+        self.assert_response_code(response, 404)
+
+    def test_nonexistent_host(self):
+        response = self.do_api_call("test1.lindenlab.com", "sideways")
+        
+        self.assert_response_code(response, 409)
+        
+    def test_delete_state(self):
+        self.server1.state = "up"
+    
+        response = self.do_api_call("test1.lindenlab.com", None)
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, None)
+        self.assertEqual(self.server1.state, None)
+
+class TestGetHostsInState(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_hosts_in_state"
+    
+    def data(self):
+        ServerClass("Class 5")
+        self.server1 = Class5Server("test1.lindenlab.com")
+        self.server2 = Class5Server("test2.lindenlab.com")
+        HostState("up")
+        HostState("down")
+    
+    def test_get_hosts_in_state(self):
+        response = self.do_api_call("up")
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, [])
+        
+        self.server1.state = "up"
+        
+        response = self.do_api_call("up")
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, [self.server1.hostname])
+        
+        self.server2.state = "up"
+        
+        response = self.do_api_call("up")
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(sorted(response.data), sorted([self.server1.hostname, self.server2.hostname]))
+        
+        self.server2.state = "down"
+        
+        response = self.do_api_call("up")
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, [self.server1.hostname])
+        
+        response = self.do_api_call("down")
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, [self.server2.hostname])
+        
+    def test_nonexistent_state(self):
+        response = self.do_api_call("sideways")
+        self.assert_response_code(response, 409, response.data)
+
+class TestListHostStates(JinxTestCase):
+    api_call_path = "/jinx/2.0/list_host_states"
+    
+    def test_list_host_states(self):
+        response = self.do_api_call()
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, [])
+        
+        HostState("up")
+        
+        response = self.do_api_call()
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, ["up"])
+        
+        HostState("down")
+        
+        response = self.do_api_call()
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(sorted(response.data), ["down", "up"])
+
+class TestAddHostState(JinxTestCase):
+    api_call_path = "/jinx/2.0/add_host_state"
+    
+    def test_add_host_state(self):
+        response = self.do_api_call("up")
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(response.data, None)
+        
+        try:
+            up = clusto.get_by_name("up")
+        except LookupError:
+            self.fail("host state 'up' was not added")
+        
+        self.assertEqual(up.name, "up")
+        self.assertTrue(isinstance(up, HostState))
+    
+    def test_add_existing_state(self):
+        HostState("up")
+        response = self.do_api_call("up")
+        self.assert_response_code(response, 409, response.data)
+    
+    def test_add_invalid_state(self):
+        response = self.do_api_call("?(*&@5")
+        self.assert_response_code(response, 400, response.data)
+
+
