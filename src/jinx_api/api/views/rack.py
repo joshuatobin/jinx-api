@@ -60,3 +60,21 @@ def get_rack_contents(request, rack_name):
             contents.append(device_info)
     
     return contents
+
+def get_server_hostnames_in_rack(request, rack_name):
+    """
+    Returns a list of server hostnames in a rack with a clusto_type of server.
+
+    Arguments:
+        rack_name -- The name of the rack (case insensitive).
+        
+    Exceptions Raised:
+        JinxDataNotFoundError -- The requested rack does not exist.
+    """
+
+    try:
+        rack = clusto.get_by_name(rack_name)
+    except LookupError:
+        return HttpResponseNotFound("Rack %s not found." % rack_name)
+
+    return [x.hostname for x in rack.contents(search_children=True, clusto_types=['server']) if x.hostname != None]

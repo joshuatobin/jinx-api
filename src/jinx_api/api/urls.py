@@ -2,6 +2,7 @@ from django.conf.urls.defaults import *
 
 api_calls = patterns('api.views',
     (r'get_rack_contents', 'rack.get_rack_contents'),
+    (r'get_server_hostnames_in_rack', 'rack.get_server_hostnames_in_rack'),
     (r'get_hosts_by_regex', 'host.get_hosts_by_regex'),
     (r'get_host_remote_hands_info', 'host.get_host_remote_hands_info'),
     (r'get_pdu_hostnames', 'pdu.get_pdu_hostnames'),
