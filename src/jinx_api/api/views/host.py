@@ -116,10 +116,11 @@ def get_host_remote_hands_info(request, hostname_or_mac):
             port_info = chassis.port_info
         
         info['pdu_connections'] = []
-        
+
         for port_num in port_info['pwr-nema-5']:
-            info['pdu_connections'].append({'pdu': port_info['pwr-nema-5'][port_num]['connection'].hostname,
-                                            'port': port_info['pwr-nema-5'][port_num]['otherportnum']})
+            if port_info['pwr-nema-5'][port_num]['connection']:
+                info['pdu_connections'].append({'pdu': port_info['pwr-nema-5'][port_num]['connection'].hostname,
+                                                'port': port_info['pwr-nema-5'][port_num]['otherportnum']})
     except (KeyError, AttributeError, IndexError):
         info['pdu_connections'] = []
     
