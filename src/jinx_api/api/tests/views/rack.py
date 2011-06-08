@@ -69,5 +69,5 @@ class TestGetServerHostnamesInRack(JinxTestCase):
 
         response = self.do_api_call("c3-03-200")
         self.assert_response_code(response, 200)
-        self.assertEqual(sorted(response.data), ['hostname1.lindenlab.com']
+        self.assertEqual(sorted(response.data), ['hostname1.lindenlab.com'])
 
