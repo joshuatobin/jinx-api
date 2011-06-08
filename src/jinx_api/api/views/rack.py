@@ -77,4 +77,4 @@ def get_server_hostnames_in_rack(request, rack_name):
     except LookupError:
         return HttpResponseNotFound("Rack %s not found." % rack_name)
 
-    return [x.hostname for x in rack.contents(search_children=True, clusto_types=['server']) if x.hostname != None]
+    return set([x.hostname for x in rack.contents(search_children=True, clusto_types=['server']) if x.hostname != None])
