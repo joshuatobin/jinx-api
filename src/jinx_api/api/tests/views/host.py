@@ -1,7 +1,7 @@
 from api.tests.base import JinxTestCase
 import clusto
 import llclusto
-from llclusto.drivers import Class5Server, ServerClass, LindenDatacenter, LindenRack, Class7Server, Class7Chassis, HostState
+from llclusto.drivers import Class5Server, ServerClass, LindenDatacenter, LindenRack, Class7Server, Class7Chassis, HostState, LindenPDU
 import sys
 
 class TestGetHostsByRegex(JinxTestCase):
@@ -267,4 +267,24 @@ class TestAddHostState(JinxTestCase):
         response = self.do_api_call("?(*&@5")
         self.assert_response_code(response, 400, response.data)
 
+class TestGetServerClassInfo(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_server_class_info"
 
+    def data(self):
+        class5 = ServerClass("Class 5", num_cpus=1, cores_per_cpu=2, ram_size=3, disk_size=4)
+        Class5Server("sim8000.agni.lindenlab.com")
+        pdu = LindenPDU()
+        pdu.hostname = "pdu1-c1-01-20.dca.lindenlab.com"
+
+    def test_get_server_class_info(self):
+        response = self.do_api_call("sim8000.agni.lindenlab.com")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, {'num_cpus': 1, 'cores_per_cpu': 2, 'ram_size': 3, 'disk_size': 4})
+
+        # Throws a 404 for hostname not found
+        response = self.do_api_call("c1.01.1000")
+        self.assert_response_code(response, 404)
+
+        # Throws a 409 for devices that are not an instance of LindenServer
+        response = self.do_api_call("pdu1-c1-01-20.dca.lindenlab.com")
+        self.assert_response_code(response, 409)

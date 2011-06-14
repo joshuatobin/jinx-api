@@ -11,7 +11,8 @@ api_calls = patterns('api.views',
     (r'get_hosts_in_state', 'host.get_hosts_in_state'),
     (r'list_host_states', 'host.list_host_states'),
     (r'add_host_state', 'host.add_host_state'),
-    
+    (r'get_server_class_info', 'host.get_server_class_info'),
+
     (r'get_pdu_hostnames', 'pdu.get_pdu_hostnames'),
     (r'power_cycle', 'pdu.power_cycle'),
     (r'power_on', 'pdu.power_on'),

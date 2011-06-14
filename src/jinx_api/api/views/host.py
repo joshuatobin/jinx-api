@@ -1,9 +1,42 @@
 import clusto
 import llclusto
 import re
-from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpResponseBadRequest, HttpResponse
 from jinx_api.http import HttpResponseInvalidState
 import traceback
+
+def _get_host_instance(request, hostname_or_mac):
+    """
+    Function that returns an instance from either a hostname or mac address.
+
+    Arguments:
+        hostname_or_mac -- The hostname or MAC address of the host.
+        
+    Exceptions Raised:
+        JinxDataNotFoundError -- A host matching the specified hostname
+            or MAC address could not be found.
+        JinxInvalidStateError -- More than one host had the specified
+            hostname or mac address.
+
+    """
+    hosts = None
+    
+    if re.match(r'[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}', hostname_or_mac, re.I):
+        # Looks like it might be a mac, try mac address first
+        hosts = clusto.get_by_mac(hostname_or_mac)
+    
+    if not hosts:
+        # If I haven't found it yet, it must be a hostname:
+        hosts = llclusto.get_by_hostname(hostname_or_mac)
+    
+    if not hosts:
+        return HttpResponseNotFound('No host was found with hostname or MAC address "%s".' % hostname_or_mac)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState('More than one host found with hostname or MAC address "%s".' % hostname_or_mac)
+    else:
+        host = hosts[0]
+    
+    return host
 
 def get_hosts_by_regex(request, regex, flags=re.I):
     """Return a list of hostnames of all hosts matching a given regular expression.  
@@ -70,24 +103,11 @@ def get_host_remote_hands_info(request, hostname_or_mac):
         JinxInvalidStateError -- More than one host had the specified
             hostname or mac address.
     """
-    
-    hosts = None
-    
-    if re.match(r'[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}', hostname_or_mac, re.I):
-        # Looks like it might be a mac, try mac address first
-        hosts = clusto.get_by_mac(hostname_or_mac)
-    
-    if not hosts:
-        # If I haven't found it yet, it must be a hostname:
-        hosts = llclusto.get_by_hostname(hostname_or_mac)
-    
-    if not hosts:
-        return HttpResponseNotFound('No host was found with hostname or MAC address "%s".' % hostname_or_mac)
-    elif len(hosts) > 1:
-        return HttpResponse('More than one host found with hostname or MAC address "%s".' % hostname_or_mac, status=409)
-    else:
-        host = hosts[0]
-        
+    host = _get_host_instance(request, hostname_or_mac)
+
+    if isinstance(host, HttpResponse):
+        return host
+
     info = {}
     
     # Pardon all of the try/catch blocks.  I want to be super-careful here, in case the
@@ -248,5 +268,42 @@ def add_host_state(request, state):
         llclusto.drivers.HostState(state)
         return None
     except clusto.exceptions.NameException:
-        return HttpResponseInvalidState("A state named '%s' already exists." % state, status=409)
+        return HttpResponseInvalidState("A state named '%s' already exists." % state)
 
+
+def get_server_class_info(request, hostname_or_mac):
+    """
+    Returns the property information pertaining to the hardware class of a server.
+    
+    Arguments:
+        hostname_or_mac -- The hostname or MAC address of the host.
+        
+    Exceptions Raised:
+        JinxDataNotFoundError -- A host matching the specified hostname
+            or MAC address could not be found.
+        JinxInvalidStateError -- More than one host had the specified
+            hostname or mac address.
+    """
+    host = _get_host_instance(request, hostname_or_mac)
+
+    if isinstance(host, HttpResponse):
+        return host
+    
+    if not isinstance(host, llclusto.drivers.LindenServer):
+         return HttpResponseInvalidState("%s is not an instance of LindenServer" % host)
+    
+    try:
+        server_class = clusto.get_by_name(host.server_class.name)
+    except LookupError:
+        return HttpResponseInvalidState("ServerClass not found: %s" % host.server_class.name)
+
+    class_info = {}
+
+    attrs = server_class.attrs()
+    
+    for attr in attrs:
+        class_info[attr.key] = attr.value
+
+    return class_info
+
+    
