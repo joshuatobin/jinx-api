@@ -1,4 +1,4 @@
-import simplejson
+import jinx_json
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed
 from jinx_api.http import HttpResponseUnsupportedMediaType
 import functools
@@ -140,8 +140,8 @@ class JSONMiddleware(object):
         json_data = request.raw_post_data
         
         try:
-            json_args = simplejson.loads(json_data)
-        except simplejson.JSONDecodeError, e:
+            json_args = jinx_json.loads(json_data)
+        except ValueError, e:
             return HttpResponseUnsupportedMediaType('Request body could not be parsed as a JSON object: %s' % str(e))
         
         if type(json_args) != list:
@@ -176,7 +176,7 @@ class JSONMiddleware(object):
             return response_data
         else:
             try:
-                response_json = simplejson.dumps(response_data)
+                response_json = jinx_json.dumps(response_data)
             except TypeError, e:
                 return HttpResponseServerError('%s returned unserializable data: %s' % (view.__name__, str(e)))
             
