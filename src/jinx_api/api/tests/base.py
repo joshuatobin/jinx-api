@@ -2,7 +2,7 @@ from django.test import TestCase
 import ConfigParser
 import clusto
 import llclusto
-import simplejson
+import jinx_json
 
 
 
@@ -49,13 +49,13 @@ class JinxTestCase(TestCase):
         response.content, which will hold the raw JSON blob).
         """
         
-        response = self.client.post(self.api_call_path, simplejson.dumps(list(args)), "application/json")
+        response = self.client.post(self.api_call_path, jinx_json.dumps(list(args)), "application/json")
         
         if response.status_code == 200:
             self.assertEqual(response['Content-Type'], "application/json", 
                 "API call %s(%s) returned type %s instead of application/json" % (self.api_call_path, str(args), response['Content-Type']))
                 
-            response.data = simplejson.loads(response.content)
+            response.data = jinx_json.loads(response.content)
         else:
             response.data = response.content
         

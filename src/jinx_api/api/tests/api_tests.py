@@ -1,8 +1,9 @@
 from django.test import TestCase
 from django.http import HttpResponseNotFound, HttpResponseServerError
 from django.conf.urls.defaults import patterns, include
-import simplejson
+import jinx_json
 import views
+import datetime
 
 # First, define a urlconf and some views that will be used to test only the
 # API middleware, not the real Jinx API call functions.
@@ -94,7 +95,7 @@ class JinxAPITests(TestCase):
         returned verbatim, without being converted from JSON format.
         """
         
-        return self.client.post(path, simplejson.dumps(data), "application/json")
+        return self.client.post(path, jinx_json.dumps(data), "application/json")
     
     def _assert_api_status_code(self, response, code, description):
         self.assertTrue('X-Jinx-Error-Source' not in response or response['X-Jinx-Error-Source'] != 'api',
@@ -122,7 +123,7 @@ class JinxAPITests(TestCase):
     def test_normal_call(self):
         response = self._post_json("/test_view_normal", [])
         
-        self.assertEqual(simplejson.loads(response.content), "Hello, world!", 
+        self.assertEqual(jinx_json.loads(response.content), "Hello, world!", 
             'test_view_normal should return "Hello, world!"')
         self._assert_api_status_code(response, 200,
             'test_view_normal should return status code 200.')
@@ -151,18 +152,18 @@ class JinxAPITests(TestCase):
     def test_arguments(self):
         response = self._post_json('/test_view_reverse_three_arguments', [1,2,"3"])
         self._assert_api_status_code(response, 200, "/test_view_reverse_three_arguments should return HTTP 200.")
-        self.assertEqual(simplejson.loads(response.content), ["3", 2, 1], 
+        self.assertEqual(jinx_json.loads(response.content), ["3", 2, 1], 
             "/test_view_reverse_three_arguments should return the three arguments in reverse order.")
         
         response = self._post_json('/test_view_echo', [1])
         self._assert_api_status_code(response, 200, '/test_view_echo should return HTTP 200.')
-        self.assertEqual(simplejson.loads(response.content), [1], "/test_view_echo([1]) should return [1]")
+        self.assertEqual(jinx_json.loads(response.content), [1], "/test_view_echo([1]) should return [1]")
         
         response = self._post_json('/test_view_echo', [1,2,3])
         self._assert_api_status_code(response, 200, '/test_view_echo should return HTTP 200.')
-        self.assertEqual(simplejson.loads(response.content), [1,2,3], 
+        self.assertEqual(jinx_json.loads(response.content), [1,2,3], 
             "/test_view_echo([1]) should return [1,2,3] (variable number of arguments should work)")
-            
+        
         response = self._post_json('/test_view_reverse_three_arguments', [1, 2])
         self._assert_call_status_code(response, 400, 
             '/test_view_reverse_three_arguments with 2 arguments should result in HTTP 400.')
@@ -174,17 +175,36 @@ class JinxAPITests(TestCase):
         response = self._post_json('/test_view_one_default_argument', ["testarg"])
         self._assert_api_status_code(response, 200, 
             '/test_view_one_default_argument with 1 argument should result in HTTP 200.')
-        self.assertEqual(simplejson.loads(response.content), "testarg")
+        self.assertEqual(jinx_json.loads(response.content), "testarg")
         
         response = self._post_json('/test_view_one_default_argument', [])
         self._assert_api_status_code(response, 200, 
             '/test_view_one_default_argument with no arguments should result in HTTP 200.')
-        self.assertEqual(simplejson.loads(response.content), "default",
+        self.assertEqual(jinx_json.loads(response.content), "default",
             '/test_view_one_default_argument should return "default" if no argument is passed.')
         
         response = self._post_json('/test_view_one_default_argument', [1, 2])
         self._assert_call_status_code(response, 400, 
             '/test_view_one_default_argument with 2 arguments should result in HTTP 400.')
+    
+    def test_datetime(self):
+        now = datetime.datetime.now()
+        response = self._post_json('/test_view_echo', [now])
+        self._assert_api_status_code(response, 200, '/test_view_echo should return HTTP 200.')
+        self.assertEqual(jinx_json.loads(response.content), [now],
+            "should be able to send and receive datetime.datetime objects")
+            
+        delta = datetime.timedelta(seconds=1394875, days=21)
+        response = self._post_json('/test_view_echo', [delta])
+        self._assert_api_status_code(response, 200, '/test_view_echo should return HTTP 200.')
+        self.assertEqual(jinx_json.loads(response.content), [delta],
+            "should be able to send and receive datetime.timedelta objects")
+        
+        response = self._post_json('/test_view_echo', [[[[[[{'1': now}]]], {'2': delta}]]])
+        self._assert_api_status_code(response, 200, '/test_view_echo should return HTTP 200.')
+        self.assertEqual(jinx_json.loads(response.content), [[[[[[{'1': now}]]], {'2': delta}]]],
+            "should be able to send and receive datetime.datetime and datetime.timedelta inside complex data structures")
+
     
     def test_doc(self):
         expected_documentation = \
