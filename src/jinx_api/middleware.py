@@ -106,10 +106,24 @@ class JSONMiddleware(object):
         The request should be a POST with a Content-Type of "application/json".
         The body of the request should be a JSON-encoded list of arguments to
         pass to the API call.  The arguments will be unpacked and passed in as
-        positional arguments to the view function.  If the view function
-        returns data, it will be JSON-encoded and sent back as a response with
-        Content-Type "application/json".  If the view function returns an
-        HttpResponse object, this will be sent back to the client as is.
+        positional and keyword arguments to the view function as described 
+        below.  If the view function returns data, it will be JSON-encoded and
+        sent back as a response with Content-Type "application/json".  If the 
+        view function returns an HttpResponse object, this will be sent back 
+        to the client as is.
+        
+        The request body can specify API calls in one of two ways, the old 
+        style or the new style.  In the old style, only positional arguments
+        may be passed, and the request body is simply a list of positional
+        arguments.  In the new style, both positional and keyword arguments may
+        be passed, and the request body is a dict with 'args' and 'kwargs' 
+        entries.  
+        
+        Old style: ['arg1', 'arg2']
+        New style: {
+                    'args': ['arg1', 'arg2'],
+                    'kwargs': {'arg3': 'value3, 'arg4': 'value4'}
+                   }
         
         Arguments:
             request -- The HttpRequest object from Django.
@@ -144,13 +158,22 @@ class JSONMiddleware(object):
         except ValueError, e:
             return HttpResponseUnsupportedMediaType('Request body could not be parsed as a JSON object: %s' % str(e))
         
-        if type(json_args) != list:
-            return HttpResponseBadRequest('Expected a list of arguments; got %s' % str(type(json_args)))
+        args = list(view_args)
+        kwargs = view_kwargs
         
-        args = list(view_args) + json_args
+        if type(json_args) == list:
+            args += json_args
+        elif type(json_args) == dict:
+            if sorted(json_args.keys()) != ['args', 'kwargs']:
+                return HttpResponseBadRequest("Expected a dict with only 'args' and 'kwargs' keys; got %s" % str(json_args.keys()))
+            else:
+                args += json_args['args']
+                kwargs.update(json_args['kwargs'])
+        else:
+            return HttpResponseBadRequest("Expected a list of arguments or a dict with 'args' and 'kwargs'; got %s" % str(type(json_args)))
         
         try:
-            response_data = view(request, *args, **view_kwargs)
+            response_data = view(request, *args, **kwargs)
         except TypeError, e:
             # This will return an HTTP 400 with a body like this:
             #   the_function_name() takes 4 arguments (3 given)

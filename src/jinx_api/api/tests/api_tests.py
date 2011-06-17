@@ -15,6 +15,7 @@ urlpatterns = patterns('api.tests.api_tests',
     (r'test_view_echo', 'test_view_echo'),
     (r'test_view_reverse_three_arguments', 'test_view_reverse_three_arguments'),
     (r'test_view_one_default_argument', 'test_view_one_default_argument'),
+    (r'test_view_two_default_arguments', 'test_view_two_default_arguments'),
     (r'test_doc', 'test_doc'),
 )
 
@@ -49,6 +50,11 @@ def test_view_one_default_argument(request, arg="default"):
     """Return the argument passed to facillitate testing arguments with defaults."""
     
     return arg
+    
+def test_view_two_default_arguments(request, arg1="default1", arg2="default2"):
+    """Return the arguments passed to facillitate testing keyword argumetns."""
+    
+    return [arg1, arg2]
     
 def test_doc(request, arg1, arg2=3):
     """Test fetching of documentation strings.
@@ -204,6 +210,22 @@ class JinxAPITests(TestCase):
         self._assert_api_status_code(response, 200, '/test_view_echo should return HTTP 200.')
         self.assertEqual(jinx_json.loads(response.content), [[[[[[{'1': now}]]], {'2': delta}]]],
             "should be able to send and receive datetime.datetime and datetime.timedelta inside complex data structures")
+            
+    def test_keyword_arguments(self):
+        response = self._post_json('/test_view_two_default_arguments', {'args': [], 'kwargs': {}})
+        self._assert_api_status_code(response, 200, 
+            '/test_view_two_default_arguments with no arguments should result in HTTP 200.')
+        self.assertEqual(jinx_json.loads(response.content), ["default1", "default2"])
+        
+        response = self._post_json('/test_view_two_default_arguments', {'args': ['test1'], 'kwargs': {}})
+        self._assert_api_status_code(response, 200, 
+            '/test_view_two_default_arguments with no arguments should result in HTTP 200.')
+        self.assertEqual(jinx_json.loads(response.content), ["test1", "default2"])
+        
+        response = self._post_json('/test_view_two_default_arguments', {'args': [], 'kwargs': {'arg2': 'test2'}})
+        self._assert_api_status_code(response, 200, 
+            '/test_view_two_default_arguments with no arguments should result in HTTP 200.')
+        self.assertEqual(jinx_json.loads(response.content), ["default1", "test2"])
 
     
     def test_doc(self):
