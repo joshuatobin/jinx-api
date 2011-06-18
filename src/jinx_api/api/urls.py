@@ -22,10 +22,6 @@ api_calls = patterns('api.views',
     (r'add_log_event_type', 'logging.add_log_event_type'),
     (r'add_log_event', 'logging.add_log_event'),    
     (r'list_log_event_types', 'logging.list_log_event_types'),
-    (r'get_log_events_by_user', 'logging.get_log_events_by_user'),
-    (r'get_log_events_by_hostname', 'logging.get_log_events_by_hostname'),
-    (r'get_log_events_by_time', 'logging.get_log_events_by_time'),
-    (r'get_log_events_by_type', 'logging.get_log_events_by_type'),
     (r'get_log_events', 'logging.get_log_events'),
 )
 

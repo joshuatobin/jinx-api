@@ -18,7 +18,7 @@ class TestAddLogEvent(JinxTestCase):
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, None)
 
-        response = self.do_api_call("hostname1", "dynamike", "power on", "test descroption")
+        response = self.do_api_call("hostname1", "dynamike", "power on", "test description")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, None)
 
@@ -32,7 +32,7 @@ class TestAddLogEvent(JinxTestCase):
 
     def test_bad_event_type(self):
         response = self.do_api_call("hostname1", "dynamike", "fake event")
-        self.assert_response_code(response, 400)
+        self.assert_response_code(response, 404)
 
         
 class TestAddLogEventType(JinxTestCase):
@@ -52,7 +52,7 @@ class TestAddLogEventType(JinxTestCase):
 
     def test_duplicate_event_type(self):
         response = self.do_api_call("power on")
-        self.assert_response_code(response, 400)
+        self.assert_response_code(response, 409)
 
     def test_bad_name(self):
         response = self.do_api_call(2)
@@ -62,16 +62,19 @@ class TestListLogEventTypes(JinxTestCase):
     api_call_path = "/jinx/2.0/list_log_event_types"
     
     def data(self):
-        LogEventType("power on")
-        LogEventType("power off")
-        LogEventType("power status")
+        l1 = LogEventType("power on")
+        l1.description = "Powers host on."
+        l2 = LogEventType("power off")
+        l2.description = "Powers host off."
+        l3 = LogEventType("power status")
+        l3.description = "Returns current power status."
 
     def test_normal_call(self):
         response = self.do_api_call()
         self.assert_response_code(response, 200)
-        self.assertEqual(sorted(response.data), [{'name': 'power off', 'description': None},
-                                                 {'name': 'power on', 'description': None}, 
-                                                 {'name': 'power status', 'description': None}])
+        self.assertEqual(cmp(response.data, {'power off' : "Powers host off.",
+                                             'power on' : "Powers host on.",
+                                             'power status' : "Returns current power status."}), 0)
 
 class TestGetLogEvents(JinxTestCase):
     api_call_path = "/jinx/2.0/get_log_events"
@@ -86,14 +89,26 @@ class TestGetLogEvents(JinxTestCase):
                          description="test description")
         
     def test_normal_call(self):
-        response = self.do_api_call("hostname1")
+        response = self.do_api_call("hostname1",
+                                    "test1",
+                                    "power on",
+                                    datetime.datetime(2000, 1, 1, 1, 1, 1, 1),
+                                    datetime.datetime(2020, 1, 1, 1, 1, 1, 1))
         self.assert_response_code(response, 200)
-        self.assertEquals(0, cmp(response.data[0], {'hostname': 'hostname1',
-                                                    'event_type': 'power on',
-                                                    'timestamp': '2010-01-01 01:01:01.000001',
-                                                    'name': 'Log0000000001',
-                                                    'user': 'test1',
-                                                    'description': 'test description'}))
+        self.assertEquals(response.data, [{u'event_type': u'power on', 
+                                           u'timestamp': datetime.datetime(2010, 1, 1, 1, 1, 1, 1), 
+                                           u'hostname': u'hostname1', 
+                                           u'name': u'Log0000000001', 
+                                           u'user': u'test1', 
+                                           u'description': u'test description'}])
+
     def test_bad_hostname(self):
-        response = self.do_api_call("invalid-hostname")
+        response = self.do_api_call(2)
         self.assert_response_code(response, 404)
+        
+    def test_bad_entity_type(self):
+        response = self.do_api_call(None, None, 2)
+        self.assert_response_code(response, 404)
+
+    def test_bad_timestamp(self):
+        response = self.do_api_call(None, None, None, 2)
