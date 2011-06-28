@@ -220,7 +220,7 @@ def set_host_state(request, hostname, state):
         else:
             host.state = state
             
-        host.add_log_event(user=???, event_type=state_change, old_state=old_state, new_state=state)
+        host.add_log_event(user=request.META['REMOTE_USER'], event_type=state_change, old_state=old_state, new_state=state)
         
         clusto.commit()
     except Exception, e:

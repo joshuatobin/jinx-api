@@ -7,7 +7,7 @@ from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpRespon
 from jinx_api.http import HttpResponseInvalidState
 
 
-def add_log_event(request, hostname, user, event_type, description=None, **kwargs):
+def add_log_event(request, hostname, event_type, user=None, description=None, **kwargs):
     """Adds a new log event.
 
     Returns:
@@ -15,8 +15,8 @@ def add_log_event(request, hostname, user, event_type, description=None, **kwarg
 
     Arguments:
         hostname -- the hostname associated with the log event.
-        user -- the user who triggered the event.
         event_type -- the name of the event type.
+        user -- the user who triggered the event (defaults to user currently authenticated with API)
         description -- a string describing what happened(optional).
 
     Exceptions Raised:
@@ -29,7 +29,11 @@ def add_log_event(request, hostname, user, event_type, description=None, **kwarg
             event_type = clusto.get_by_name(event_type)
         except LookupError, e:
             return HttpResponseNotFound("Event type '%s' does not exist" % event_type)
-
+    
+    # Default to the user from the kerberos principal
+    if user is None:
+        user = request.META['REMOTE_USER']
+    
     source_entity = llclusto.get_by_hostname(hostname)
     if len(source_entity) < 1:
         return HttpResponseNotFound("No entity found for '%s'" % hostname)
