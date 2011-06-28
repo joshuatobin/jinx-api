@@ -232,7 +232,7 @@ def set_host_state(request, hostname, state):
     
         if isinstance(e, IndexError):
             return HttpResponseNotFound("Host %s not found." % hostname)
-        else if isinstance(e, ValueError:
+        elif isinstance(e, ValueError:
             return HttpResponseInvalidState("State %s does not exist." % state)
     
 def get_hosts_in_state(request, state):
