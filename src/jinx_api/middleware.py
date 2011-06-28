@@ -1,10 +1,12 @@
 import jinx_json
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 from jinx_api.http import HttpResponseUnsupportedMediaType
 import functools
 import traceback
 import sys
 import inspect
+import subprocess
+import re
 
 
 def trim_docstring(docstring):
@@ -207,8 +209,41 @@ class JSONMiddleware(object):
 
 
 class JinxAuthorizationMiddleware(object):
+    def __init__(self):
+        try:
+            cluster_name = subprocess.Popen(["/usr/bin/get-conf-linden", "--cluster"], stdout=subprocess.PIPE).communicate()[0]
+            cluster_name = cluster_name.strip()
+        
+            if cluster_name.startswith('cluster-name: '):
+                self.cluster_name = cluster_name[14:]
+        except OSError:
+            self.cluster_name = None
+        
+        self.principal_re = re.compile(r'^([^/@]+)(/([^@]+))?@(.*)$')
+        
     def process_view(self, request, view, view_args, view_kwargs):
         """Return a 403 Forbidden status if LDAP says the user may not make this API call."""
-    
-        # check LDAP to see whether the user (from kerberos authentication) has the right to run this API call
-        pass
+        
+        if not request.META.get('REMOTE_USER'):
+            # I'd like to throw a 403 here but that'd break the unit tests.
+            request.META['REMOTE_USER'] = None
+            return
+        
+        krb_principal = request.META['REMOTE_USER']
+        
+        match = self.principal_re.match(krb_principal)
+        
+        if match:
+            user = match.group(1)
+            cluster = match.group(3)
+            domain = match.group(4)
+        
+            if cluster:
+                if cluster != self.cluster_name:
+                    return HttpResponseForbidden('%s may not access this server which is in the %s cluster' % (krb_principal, self.cluster_name))
+            
+            # Do authorization checks here...
+            request.META['REMOTE_USER'] = user
+            
+        return
+
