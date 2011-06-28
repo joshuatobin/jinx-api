@@ -219,7 +219,7 @@ class JinxAuthorizationMiddleware(object):
         except OSError:
             self.cluster_name = None
         
-        self.principal_re = re.compile(r'^([^/@]+)(/([^@]+))?@(.*)$')
+        self.principal_re = re.compile(r'^(?P<user>[^/@]+)(/(?P<cluster>[^@]+))?@(?P<realm>.*)$')
         
     def process_view(self, request, view, view_args, view_kwargs):
         """Return a 403 Forbidden status if LDAP says the user may not make this API call."""
@@ -234,10 +234,9 @@ class JinxAuthorizationMiddleware(object):
         match = self.principal_re.match(krb_principal)
         
         if match:
-            user = match.group(1)
-            cluster = match.group(3)
-            domain = match.group(4)
-        
+            user = match.group('user')
+            cluster = match.group('cluster')
+            
             if cluster:
                 if cluster != self.cluster_name:
                     return HttpResponseForbidden('%s may not access this server which is in the %s cluster' % (krb_principal, self.cluster_name))
