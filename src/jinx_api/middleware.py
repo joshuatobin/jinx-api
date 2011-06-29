@@ -210,17 +210,23 @@ class JSONMiddleware(object):
 
 class JinxAuthorizationMiddleware(object):
     def __init__(self):
-        try:
-            cluster_name = subprocess.Popen(["/usr/bin/get-conf-linden", "--cluster"], stdout=subprocess.PIPE).communicate()[0]
-            cluster_name = cluster_name.strip()
-        
-            if cluster_name.startswith('cluster-name: '):
-                self.cluster_name = cluster_name[14:]
-        except OSError:
-            self.cluster_name = None
-        
         self.principal_re = re.compile(r'^(?P<user>[^/@]+)(/(?P<cluster>[^@]+))?@(?P<realm>.*)$')
-        
+    
+    def get_cluster_name(self):
+        try:
+            return self.cluster_name
+        except AttributeError:
+            try:
+                cluster_name = subprocess.Popen(["/usr/bin/get-conf-linden", "--cluster"], stdout=subprocess.PIPE).communicate()[0]
+                cluster_name = cluster_name.strip()
+            
+                if cluster_name.startswith('cluster-name: '):
+                    self.cluster_name = cluster_name[14:]
+            except OSError:
+                self.cluster_name = None
+                
+            return self.cluster_name
+    
     def process_view(self, request, view, view_args, view_kwargs):
         """Return a 403 Forbidden status if LDAP says the user may not make this API call."""
         
@@ -238,7 +244,7 @@ class JinxAuthorizationMiddleware(object):
             cluster = match.group('cluster')
             
             if cluster:
-                if cluster != self.cluster_name:
+                if cluster != self.get_cluster_name():
                     return HttpResponseForbidden('%s may not access this server which is in the %s cluster' % (krb_principal, self.cluster_name))
             
             # Do authorization checks here...

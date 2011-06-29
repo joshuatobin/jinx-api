@@ -23,7 +23,6 @@ class JinxTestCase(TestCase):
         conf.add_section('clusto')
         conf.set('clusto', 'dsn', 'sqlite:///:memory:')
         clusto.connect(conf)
-        clusto.init_clusto()
         clusto.clear()
         clusto.SESSION.close()
         clusto.init_clusto()
@@ -41,7 +40,7 @@ class JinxTestCase(TestCase):
     def data(self):
         pass
         
-    def do_api_call(self, *args):
+    def do_api_call(self, *args, **kwargs):
         """Performs the API call for this test case and returns the results.
         
         JSON encoding and decoding is handled behind the scenes.  The decoded
@@ -49,7 +48,7 @@ class JinxTestCase(TestCase):
         response.content, which will hold the raw JSON blob).
         """
         
-        response = self.client.post(self.api_call_path, jinx_json.dumps(list(args)), "application/json")
+        response = self.client.post(self.api_call_path, jinx_json.dumps(dict(args=args, kwargs=kwargs)), "application/json")
         
         if response.status_code == 200:
             self.assertEqual(response['Content-Type'], "application/json", 

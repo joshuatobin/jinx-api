@@ -1,7 +1,7 @@
 from api.tests.base import JinxTestCase
 import clusto
 import llclusto
-from llclusto.drivers import Class5Server, ServerClass, LindenDatacenter, LindenRack, Class7Server, Class7Chassis, HostState, LindenPDU
+from llclusto.drivers import Class5Server, ServerClass, LindenDatacenter, LindenRack, Class7Server, Class7Chassis, HostState, LindenPDU, LogEventType
 import sys
 
 class TestGetHostsByRegex(JinxTestCase):
@@ -10,6 +10,7 @@ class TestGetHostsByRegex(JinxTestCase):
     def data(self):
         # Populate Clusto
         ServerClass("Class 5")
+        HostState("up")
         Class5Server("hostname1")
         Class5Server("hostname2")
         Class5Server("hostname3")
@@ -37,6 +38,7 @@ class TestGetRemoteHandsInfo(JinxTestCase):
     def data(self):
         # Populate Clusto
         ServerClass("Class 5")
+        HostState("up")
         h1 = Class5Server("hostname1.lindenlab.com")
         h1.serial_number = "SM55880"
         h1.set_port_attr("nic-eth", 1, "mac", "aa:bb:cc:11:22:33")
@@ -117,9 +119,9 @@ class TestGetHostState(JinxTestCase):
     
     def data(self):
         ServerClass("Class 5")
+        HostState("up")
         server1 = Class5Server("test1.lindenlab.com")
         server2 = Class5Server("test2.lindenlab.com")
-        HostState("up")
         server1.state = "up"
         
     def test_get_host_state(self):
@@ -130,7 +132,8 @@ class TestGetHostState(JinxTestCase):
     def test_no_state(self):
         response = self.do_api_call("test2.lindenlab.com")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, None)
+        # Hosts now default to state "up".
+        self.assertEqual(response.data, "up")
     
     def test_nonexistent_host(self):
         response = self.do_api_call("test3.lindenlab.com")
@@ -141,13 +144,14 @@ class TestSetHostState(JinxTestCase):
     
     def data(self):
         ServerClass("Class 5")
-        self.server1 = Class5Server("test1.lindenlab.com")
         HostState("up")
         HostState("down")
+        LogEventType("state change")
+        self.server1 = Class5Server("test1.lindenlab.com")
 
     def test_set_host_state(self):
         response = self.do_api_call("test1.lindenlab.com", "up")
-        self.assert_response_code(response, 200)
+        self.assert_response_code(response, 200, response.data)
         self.assertEqual(response.data, None)
         self.assertEqual(self.server1.state, "up")
         
@@ -186,35 +190,35 @@ class TestGetHostsInState(JinxTestCase):
     
     def data(self):
         ServerClass("Class 5")
-        self.server1 = Class5Server("test1.lindenlab.com")
-        self.server2 = Class5Server("test2.lindenlab.com")
         HostState("up")
         HostState("down")
+        self.server1 = Class5Server("test1.lindenlab.com")
+        self.server2 = Class5Server("test2.lindenlab.com")
     
     def test_get_hosts_in_state(self):
         response = self.do_api_call("up")
         self.assert_response_code(response, 200, response.data)
-        self.assertEqual(response.data, [])
+        self.assertEqual(sorted(response.data), sorted([self.server1.hostname, self.server2.hostname]))
         
-        self.server1.state = "up"
+        self.server1.state = "down"
         
-        response = self.do_api_call("up")
+        response = self.do_api_call("down")
         self.assert_response_code(response, 200, response.data)
         self.assertEqual(response.data, [self.server1.hostname])
-        
-        self.server2.state = "up"
-        
-        response = self.do_api_call("up")
-        self.assert_response_code(response, 200, response.data)
-        self.assertEqual(sorted(response.data), sorted([self.server1.hostname, self.server2.hostname]))
         
         self.server2.state = "down"
         
-        response = self.do_api_call("up")
+        response = self.do_api_call("down")
+        self.assert_response_code(response, 200, response.data)
+        self.assertEqual(sorted(response.data), sorted([self.server1.hostname, self.server2.hostname]))
+        
+        self.server2.state = "up"
+        
+        response = self.do_api_call("down")
         self.assert_response_code(response, 200, response.data)
         self.assertEqual(response.data, [self.server1.hostname])
         
-        response = self.do_api_call("down")
+        response = self.do_api_call("up")
         self.assert_response_code(response, 200, response.data)
         self.assertEqual(response.data, [self.server2.hostname])
         
@@ -272,6 +276,7 @@ class TestGetServerClassInfo(JinxTestCase):
 
     def data(self):
         class5 = ServerClass("Class 5", num_cpus=1, cores_per_cpu=2, ram_size=3, disk_size=4)
+        HostState("up")
         Class5Server("sim8000.agni.lindenlab.com")
         pdu = LindenPDU()
         pdu.hostname = "pdu1-c1-01-20.dca.lindenlab.com"

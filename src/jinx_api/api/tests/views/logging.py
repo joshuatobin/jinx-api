@@ -2,36 +2,37 @@ from api.tests.base import JinxTestCase
 import clusto
 import datetime
 import llclusto
-from llclusto.drivers import Class5Server, ServerClass, LogEventType
+from llclusto.drivers import Class5Server, ServerClass, LogEventType, HostState
 
 class TestAddLogEvent(JinxTestCase):
     api_call_path = "/jinx/2.0/add_log_event"
 
     def data(self):
-        # Populate Clusto                                                                                                                            
+        # Populate Clusto
         ServerClass("Class 5")
+        HostState("up")
         Class5Server("hostname1")
         LogEventType("power on")
 
     def test_normal_call(self):
-        response = self.do_api_call("hostname1", "dynamike", "power on")
+        response = self.do_api_call(hostname="hostname1", user="dynamike", event_type="power on")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, None)
 
-        response = self.do_api_call("hostname1", "dynamike", "power on", "test description")
+        response = self.do_api_call(hostname="hostname1", user="dynamike", event_type="power on", description="test description")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, None)
 
     def test_bad_hostname(self):
-        response = self.do_api_call("hostname2", "dynamike", "power on")
+        response = self.do_api_call(hostname="hostname2", user="dynamike", event_type="power on")
         self.assert_response_code(response, 404)
 
     def test_bad_user(self):
-        response = self.do_api_call("hostname1", 1, "power on")
+        response = self.do_api_call(hostname="hostname1", user=1, event_type="power on")
         self.assert_response_code(response, 400)
 
     def test_bad_event_type(self):
-        response = self.do_api_call("hostname1", "dynamike", "fake event")
+        response = self.do_api_call(hostname="hostname1", user="dynamike", event_type="fake event")
         self.assert_response_code(response, 404)
 
         
@@ -80,6 +81,7 @@ class TestGetLogEvents(JinxTestCase):
     api_call_path = "/jinx/2.0/get_log_events"
 
     def data(self):
+        HostState("up")
         l1 = LogEventType("power on")
         ServerClass("Class 5")
         h1 = Class5Server("hostname1")

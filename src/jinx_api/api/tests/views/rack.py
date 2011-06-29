@@ -1,6 +1,6 @@
 from api.tests.base import JinxTestCase
 import clusto
-from llclusto.drivers import Class5Server, Class7Server, Class7Chassis, ServerClass, LindenRack
+from llclusto.drivers import Class5Server, Class7Server, Class7Chassis, ServerClass, LindenRack, HostState
 import sys
 
 class TestGetRackContents(JinxTestCase):
@@ -8,6 +8,7 @@ class TestGetRackContents(JinxTestCase):
 
     def data(self):
         # Populate Clusto
+        HostState("up")
         rack = LindenRack("c2-02-00")
         ServerClass("Class 5")
         h1 = Class5Server("hostname1.lindenlab.com")
@@ -37,8 +38,9 @@ class TestGetServerHostnamesInRack(JinxTestCase):
     api_call_path = "/jinx/2.0/get_server_hostnames_in_rack"
     
     def data(self):
-        # Populate Clusto                                                                                                                                            
+        # Populate Clusto
         ServerClass("Class 5")
+        HostState("up")
         h1 = Class5Server("hostname1.lindenlab.com")
         h2 = Class5Server("hostname2.lindenlab.com")
 

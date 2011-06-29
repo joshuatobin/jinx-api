@@ -210,30 +210,27 @@ def set_host_state(request, hostname, state):
         host = llclusto.get_by_hostname(hostname)[0]
         
         # Fetch the "State Change" LogEventType
-        state_change = llclusto.get_by_name("State Change")
+        state_change = clusto.get_by_name("state change")
         old_state = host.state
         
-        clusto.begin_transaction()
-        
-        if state is None:
-            del host.state
-        else:
-            host.state = state
-            
-        host.add_log_event(user=request.META['REMOTE_USER'], event_type=state_change, old_state=old_state, new_state=state)
-        
-        clusto.commit()
-    except Exception, e:
         try:
+            clusto.begin_transaction()
+            
+            if state is None:
+                del host.state
+            else:
+                host.state = state
+                
+            host.add_log_event(user=request.META['REMOTE_USER'], event_type=state_change, old_state=old_state, new_state=state)
+            
+            clusto.commit()
+        except:
             clusto.rollback_transaction()
-        except clusto.exceptions.TransactionException:
-            # Just means that the exception happened before the clusto.begin_transaction() call.
-            pass
-    
-        if isinstance(e, IndexError):
-            return HttpResponseNotFound("Host %s not found." % hostname)
-        elif isinstance(e, ValueError:
-            return HttpResponseInvalidState("State %s does not exist." % state)
+            raise
+    except IndexError:
+        return HttpResponseNotFound("Host %s not found." % hostname)
+    except ValueError:
+        return HttpResponseInvalidState("State %s does not exist." % state)
     
 def get_hosts_in_state(request, state):
     """Gets a list of all hosts in the specified state.
