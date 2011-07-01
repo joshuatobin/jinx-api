@@ -225,6 +225,13 @@ class TestGetHostsInState(JinxTestCase):
     def test_nonexistent_state(self):
         response = self.do_api_call("sideways")
         self.assert_response_code(response, 409, response.data)
+        
+    def test_no_hostname(self):
+        server = Class5Server()
+        
+        response = self.do_api_call("up")
+        self.assert_response_code(response, 200, response.data)
+        self.assertTrue(None not in response.data)
 
 class TestListHostStates(JinxTestCase):
     api_call_path = "/jinx/2.0/list_host_states"

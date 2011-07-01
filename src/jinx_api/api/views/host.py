@@ -246,7 +246,7 @@ def get_hosts_in_state(request, state):
     """
     try:
         state = clusto.get_entities(names=[state], clusto_drivers=[llclusto.drivers.HostState])[0]
-        return [host.hostname for host in state]
+        return [host.hostname for host in state if host.hostname is not None]
     except IndexError:
         return HttpResponseInvalidState("State %s does not exist." % state)
     
