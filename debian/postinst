@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for jinx-api-linden
+# postinst script for jinx-api
 #
 # Delete this file if you don't need it.
 #

@@ -1,11 +1,11 @@
-Source: jinx-api-linden
+Source: jinx-api
 Section: web
 Priority: extra
 Maintainer: Lex Linden <lex@lindenlab.com>
 Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.2
 
-Package: jinx-api-linden
+Package: jinx-api
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, python-django, clusto, python-llclusto-linden (>= 1.0), python-jinx-json
 Description: a django web service providing an API for Jinx

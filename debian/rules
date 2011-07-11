@@ -35,7 +35,7 @@ build-stamp: configure-stamp
 
 	# Add here commands to compile the package.
 	$(MAKE)
-	#docbook-to-man debian/jinx-api-linden.sgml > jinx-api-linden.1
+	#docbook-to-man debian/jinx-api.sgml > jinx-api.1
 
 	touch $@
 
@@ -55,8 +55,8 @@ install: build
 	dh_clean -k 
 	dh_installdirs
 
-	# Add here commands to install the package into debian/jinx-api-linden.
-	$(MAKE) DESTDIR=$(CURDIR)/debian/jinx-api-linden install
+	# Add here commands to install the package into debian/jinx-api.
+	$(MAKE) DESTDIR=$(CURDIR)/debian/jinx-api install
 
 
 # Build architecture-independent files here.
@@ -80,7 +80,7 @@ binary-arch: build install
 #	dh_python
 
 # To add an init script, uncomment this line and edit debian/init.d and 
-# customize debian/jinx-api-linden.default to suit your needs.
+# customize debian/jinx-api.default to suit your needs.
 #	dh_installinit
 
 # To add cron jobs, uncomment this line and make a crontab file named 
