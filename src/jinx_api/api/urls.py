@@ -23,6 +23,17 @@ api_calls = patterns('api.views',
     (r'add_log_event', 'logging.add_log_event'),    
     (r'list_log_event_types', 'logging.list_log_event_types'),
     (r'get_log_events', 'logging.get_log_events'),
+
+    (r'list_servable_pgi_images', 'pgi.list_servable_pgi_images'),
+    (r'get_hosts_with_image', 'pgi.get_hosts_with_image'),
+    (r'list_host_image_associations', 'pgi.list_host_image_associations'),
+    (r'get_current_pgi_image', 'pgi.get_current_pgi_image'),
+    (r'get_previous_pgi_image', 'pgi.get_previous_pgi_image'),
+    (r'update_host_image_association', 'pgi.update_host_image_association'),
+    (r'rollback_host_image', 'pgi.rollback_host_image'),
+    (r'get_si_images', 'pgi.get_si_images'),
+    (r'delete_si_image', 'pgi.delete_si_image'),
+    (r'add_si_image', 'pgi.add_si_image'),
 )
 
 urlpatterns = patterns('api.views',
