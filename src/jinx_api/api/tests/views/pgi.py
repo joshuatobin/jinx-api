@@ -100,15 +100,17 @@ class TestGetCurrentPGIImage(JinxTestCase):
         response = self.do_api_call("hostname1")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, {"hostname1": "test image2"})
-
-    def test_bad_call(self):
-        response = self.do_api_call("hostname3")
-        self.assert_response_code(response, 409)
         response = self.do_api_call("hostname2")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, {})
+        
+    def test_bad_call(self):
+        # hostname3 does not exist
+        response = self.do_api_call("hostname3")
         self.assert_response_code(response, 404)
 
         
-class TestGetCurrentPGIImage(JinxTestCase):
+class TestGetPreviousPGIImage(JinxTestCase):
     api_call_path = "/jinx/2.0/get_previous_pgi_image"
 
     def data(self):
@@ -125,16 +127,20 @@ class TestGetCurrentPGIImage(JinxTestCase):
         response = self.do_api_call("hostname1")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, {"hostname1": "test image1"})
+
         image3 = PGIImage("test image3")
         self.host1.pgi_image = image3
         response = self.do_api_call("hostname1")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, {"hostname1": "test image2"})
 
-    def test_bad_call(self):
-        response = self.do_api_call("hostname3")
-        self.assert_response_code(response, 409)
         response = self.do_api_call("hostname2")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, {})
+
+    def test_bad_call(self):
+        # hostname3 does not exist
+        response = self.do_api_call("hostname3")
         self.assert_response_code(response, 404)
 
 
@@ -159,10 +165,12 @@ class TestUpdateHostImageAssociation(JinxTestCase):
         self.assertEqual(self.host1.pgi_image, self.image2)
 
     def test_bad_call(self):
+        #hostname2 does not exist
         response = self.do_api_call("hostname2", "test image1")
-        self.assert_response_code(response, 409)
+        self.assert_response_code(response, 404)
+        # test image3 does not exist
         response = self.do_api_call("hostname1", "test image3")
-        self.assert_response_code(response, 409)
+        self.assert_response_code(response, 404)
 
 
 class TestRollbackHostImage(JinxTestCase):
@@ -191,9 +199,15 @@ class TestRollbackHostImage(JinxTestCase):
         self.assertEqual(self.host1.pgi_image, self.image3)
 
     def test_bad_call(self):
+        # hostname2 does not exist
+        response = self.do_api_call("hostname2")
+        self.assert_response_code(response, 404)
+        self.host2 = Class5Server("hostname2")
+        # hostname2 does not have an image to rollback too
+        self.host2.pgi_image = self.image1
         response = self.do_api_call("hostname2")
         self.assert_response_code(response, 409)
-
+        
 
 class TestGetSIImages(JinxTestCase):
     api_call_path = "/jinx/2.0/get_si_images"
@@ -222,8 +236,9 @@ class TestGetSIImages(JinxTestCase):
         self.assertEqual(sorted(response.data), sorted([]))
 
     def test_bad_call(self):
+        # hostname4 does not exist
         response = self.do_api_call("hostname4")
-        self.assert_response_code(response, 409)
+        self.assert_response_code(response, 404)
 
 
 class TestDeleteSIImage(JinxTestCase):
@@ -249,19 +264,24 @@ class TestDeleteSIImage(JinxTestCase):
         self.assertEqual(self.host1.get_stored_pgi_images(), [])
 
     def test_bad_call(self):
+        # hostname2 does not exist
         response = self.do_api_call("hostname2", "test image1")
-        self.assert_response_code(response, 409)
-        response = self.do_api_call("hostname1", "test image3")
-        self.assert_response_code(response, 409)
+        self.assert_response_code(response, 404)
 
+        # test image3 does not exist
+        response = self.do_api_call("hostname1", "test image3")
+        self.assert_response_code(response, 404)
+        
+        # test image1 is associated with a host
         self.host2 = Class5Server("hostname2")
         self.host2.pgi_image = self.image1
         response = self.do_api_call("hostname1", "test image1")
         self.assert_response_code(response, 409)
 
+        # test image3 is not stored on hostname1
         self.image3 = PGIImage("test image3")
         response = self.do_api_call("hostname1", "test image3")
-        self.assert_response_code(response, 409)
+        self.assert_response_code(response, 404)
 
 
 class TestAddSIImage(JinxTestCase):
@@ -290,6 +310,7 @@ class TestAddSIImage(JinxTestCase):
         self.assertEqual(sorted(self.host1.get_stored_pgi_images()), sorted([self.image1, self.image2, self.image3]))
 
     def test_bad_call(self):
+        #hostname2 does not exist
         response = self.do_api_call("hostname2", "test image4")
-        self.assert_response_code(response, 409)
+        self.assert_response_code(response, 404)
 

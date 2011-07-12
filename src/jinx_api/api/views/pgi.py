@@ -3,7 +3,7 @@ import llclusto
 import re
 from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpResponseBadRequest, HttpResponse
 from jinx_api.http import HttpResponseInvalidState
-from llclusto.drivers import PGIImage
+from llclusto.drivers import PGIImage, RevertPGIImageError
 
 def list_servable_pgi_images(request):
     """Returns a list of servable PGI images stored on the PGI systemimagers.
@@ -28,16 +28,16 @@ def list_servable_pgi_images(request):
 
 
 def get_hosts_with_image(request, image_name):
-    """Returns a list of hostnames that are associated with a particular image name
+    """Returns a list of hostnames that are associated with a particular image name.
 
     Returns:
     A list of hostnames as strings.
     
     Arguments:
-    image_name -- a string containing the image name
+    image_name -- a string containing the image name.
 
     Exceptions Raised:
-    HttpResponseNotFound -- unable to find hosts associated with image_name
+    JinxDataNotFoundError -- unable to find matching image name.
     """
 
     hosts = []
@@ -53,10 +53,10 @@ def get_hosts_with_image(request, image_name):
 
 
 def list_host_image_associations(request):
-    """Returns all hostnames and associated PGI image names
+    """Returns all hostnames and associated PGI image names.
 
     Returns:
-    A dictionary keyed on hostnames and the values are the associated image name
+    A dictionary keyed on hostnames and the values are the associated image name.
 
     Arguments:
     None
@@ -79,72 +79,79 @@ def get_current_pgi_image(request, hostname):
     A dictionary keyed on hostname. The value is the associated image name.
 
     Arguments:
-    hostname -- the hostname formatted as a string
+    hostname -- the hostname formatted as a string.
 
     Exceptions Raised:
-    HttpResponseInvalidState -- unable to find matching hostname
-    HttpResponseNotFound -- PGI image not found for the given hostname
+    JinxDataNotFoundError -- unable to find matching hostname.
+    JinxInvalidStateError -- more than one host was found matching the hostname.
     """
 
-    try:
-        host = llclusto.get_by_hostname(hostname)[0]
-    except IndexError:
-        return HttpResponseInvalidState("Hostname '%s' does not exist." % hostname)
+    hosts = llclusto.get_by_hostname(hostname)
+    if len(hosts) < 1:
+        return HttpResponseNotFound("Hostname '%s' does not exist" % hostname)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState("Multiple hosts found matching '%s'" % hostname)
+    host = hosts[0]
     
     if host.pgi_image is None:
-        return HttpResponseNotFound("No PGI image found for '%s'" % hostname)
-    else:
-        return {hostname : host.pgi_image.name}
+        return {}
+
+    return {hostname : host.pgi_image.name}
 
 
 def get_previous_pgi_image(request, hostname):
-    """Returns the image that was previously assigned to the hostname
+    """Returns the image that was previously assigned to the hostname.
 
     Returns:
     A dictionary keyed on hostname. The value is the associated image name.
     
     Arguments:
-    hostname -- the hostname formatted as a string
+    hostname -- the hostname formatted as a string.
 
     Exceptions Raised:
-    HttpResponseInvalidState -- unable to find matching hostname
-    HttpResponseNotFound -- PGI image not found for the given hostname
+    JinxDataNotFoundError -- unable to find matching hostname.
+    JinxInvalidStateError -- more than one host was found matching the hostname.
     """
 
-    try:
-        host = llclusto.get_by_hostname(hostname)[0]
-    except IndexError:
-        return HttpResponseInvalidState("Hostname '%s' does not exist." % hostname)
+    hosts = llclusto.get_by_hostname(hostname)
+    if len(hosts) < 1:
+        return HttpResponseNotFound("Hostname '%s' does not exist" % hostname)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState("Multiple hosts found matching '%s'" % hostname)
+    host = hosts[0]
 
     if host.previous_pgi_image is None:
-        return HttpResponseNotFound("No PGI image found for '%s'" % hostname)
+        return {}
     else:
         return {hostname : host.previous_pgi_image.name}
 
 
 def update_host_image_association(request, hostname, image_name):
-    """Associate a host with the pgi image
+    """Associate a host with the pgi image.
     
     Returns:
     None
     
     Arguments:
-    hostname -- the hostname formatted as a string
-    image_name -- the image name formatted at a string
+    hostname -- the hostname formatted as a string.
+    image_name -- the image name formatted at a string.
 
     Exceptions Raised:
-    HttpResponseInvalidState -- unable to find matching hostname or image_name
+    JinxDataNotFoundError -- unable to find matching hostname or image_name.
+    JinxInvalidStateError -- more than one host was found matching the hostname.
     """
 
-    try:
-        host = llclusto.get_by_hostname(hostname)[0]
-    except IndexError:
-        return HttpResponseInvalidState("Hostname '%s' does not exist." % hostname)
-        
+    hosts = llclusto.get_by_hostname(hostname)
+    if len(hosts) < 1:
+        return HttpResponseNotFound("Hostname '%s' does not exist" % hostname)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState("Multiple hosts found matching '%s'" % hostname)
+    host = hosts[0]
+
     try:
         image = clusto.get_by_name(image_name)
-    except (LookupError, IndexError, KeyError):
-        return HttpResponseInvalidState("Image '%s' does not exist." % image_name)
+    except LookupError:
+        return HttpResponseNotFound("Image '%s' does not exist." % image_name)
         
     host.pgi_image = image
     
@@ -152,78 +159,91 @@ def update_host_image_association(request, hostname, image_name):
 
 
 def rollback_host_image(request, hostname):
-    """Rollback image association to previous pgi image
+    """Rollback image association to previous pgi image.
 
     Returns:
     None
     
     Arguments:
-    hostname -- the hostname formatted as a string
+    hostname -- the hostname formatted as a string.
 
     Exceptions Raised:
-    HttpResponseInvalidState -- unable to find matching hostname
+    JinxDataNotFoundError -- unable to find matching hostname.
+    JinxInvalidStateError -- more than one host was found matching the hostname.
+                          -- no image was previously associated with this host.
     """
 
+    hosts = llclusto.get_by_hostname(hostname)
+    if len(hosts) < 1:
+        return HttpResponseNotFound("Hostname '%s' does not exist" % hostname)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState("Multiple hosts found matching '%s'" % hostname)
+    host = hosts[0]
+    
     try:
-        host = llclusto.get_by_hostname(hostname)[0]
-    except IndexError:
-        return HttpResponseInvalidState("Hostname '%s' does not exist." % hostname)
-
-    host.revert_pgi_image()
+        host.revert_pgi_image()
+    except RevertPGIImageError as e:
+        return HttpResponseInvalidState(str(e))
     
     return
 
 
 def get_si_images(request, si_hostname):
-    """Gets a lists of all images on a systemimager
+    """Gets a lists of all images on a systemimager.
 
     Returns:
-    A list of image names formatted as strings
+    A list of image names formatted as strings.
     
     Arguments:
-    si_hostname -- the hostname of the systemimager formatted as a string
+    si_hostname -- the hostname of the systemimager formatted as a string.
 
     Exceptions Raised:
-    HttpResponseInvalidState -- unable to find matching systemimager hostname
+    JinxDataNotFoundError -- unable to find matching hostname. 
+    JinxInvalidStateError -- more than one host was found matching the hostname.
     """
-    try:
-        host = llclusto.get_by_hostname(si_hostname)[0]
-    except IndexError:
-        return HttpResponseInvalidState("Systemimager hostname '%s' does not exist." % si_hostname)
+
+    hosts = llclusto.get_by_hostname(si_hostname)
+    if len(hosts) < 1:
+        return HttpResponseNotFound("Systemimager hostname '%s' does not exist" % si_hostname)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState("Multiple hosts found matching '%s'" % si_hostname)
+    host = hosts[0]
         
     images = []
-    
     for image in host.get_stored_pgi_images():
         images.append(image.name)
-        
+
     return images
 
 
 def delete_si_image(request, si_hostname, image_name):
-    """Deletes the PGI image from systemimager
+    """Deletes the PGI image from systemimager.
     
     Returns:
     None
     
     Arguments:
-    si_hostname -- the systemimager hostname formatted as a string
-    image_name -- the image name formatted at a string
+    si_hostname -- the systemimager hostname formatted as a string.
+    image_name -- the image name formatted at a string.
 
     Exceptions Raised:
-    HttpResponseInvalidState -- unable to find matching systemimager hostname or image_name.
-                             -- image is still associated with hosts.
-                             -- image is not stored on systemimager
+    JinxDataNotFoundError -- unable to find matching systemimager hostname or image_name.
+                          -- unable to find image on systemimager.
+    JinxInvalidStateError -- image is still associated with hosts.
+                          -- more than one host was found matching the hostname.
     """
 
     try:
         image = clusto.get_by_name(image_name)
     except LookupError:
-        return HttpResponseInvalidState("Image '%s' does not exist." % image_name)
+        return HttpResponseNotFound("Image '%s' does not exist." % image_name)
     
-    try:
-        host = llclusto.get_by_hostname(si_hostname)[0]
-    except IndexError:
-        return HttpResponseInvalidState("Systemimager hostname '%s' does not exist." % si_hostname)
+    hosts = llclusto.get_by_hostname(si_hostname)
+    if len(hosts) < 1:
+        return HttpResponseNotFound("Systemimager hostname '%s' does not exist" % si_hostname)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState("Multiple hosts found matching '%s'" % si_hostname)
+    host = hosts[0]
     
     # First, verify no host is using this as a current image
     hosts = image.get_hosts_associated_with()
@@ -234,29 +254,32 @@ def delete_si_image(request, si_hostname, image_name):
     try:
         host.delete_stored_pgi_image(image)
     except LookupError:
-        return HttpResponseInvalidState("Image '%s' is not marked as stored on systemimager '%s'." % (image_name, si_hostname))
+        return HttpResponseNotFound("Image '%s' is not marked as stored on systemimager '%s'." % (image_name, si_hostname))
 
     return
 
 
 def add_si_image(request, si_hostname, image_name):
-    """Adds image to systemimager
+    """Adds image to systemimager.
 
     Returns:
     None
 
     Arguments:
-    si_hostname -- the systemimager hostname formatted as a string
-    image_name -- the image name formatted at a string 
+    si_hostname -- the systemimager hostname formatted as a string.
+    image_name -- the image name formatted at a string.
 
     Exceptions Raised:
-    HttpResponseInvalidState -- unable to find matching systemimager hostname.
+    JinxDataNotFoundError -- unable to find matching systemimager hostname or image_name.
+    JinxInvalidStateError -- more than one host was found matching the hostname.
     """
-    
-    try:
-        host = llclusto.get_by_hostname(si_hostname)[0]
-    except IndexError:
-        return HttpResponseInvalidState("Systemimager hostname '%s' does not exist." % si_hostname)
+
+    hosts = llclusto.get_by_hostname(si_hostname)
+    if len(hosts) < 1:
+        return HttpResponseNotFound("Systemimager hostname '%s' does not exist" % si_hostname)
+    elif len(hosts) > 1:
+        return HttpResponseInvalidState("Multiple hosts found matching '%s'" % si_hostname)
+    host = hosts[0]
     
     try:
         image = clusto.get_by_name(image_name)
