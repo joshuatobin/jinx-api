@@ -23,6 +23,10 @@ api_calls = patterns('api.views',
     (r'add_log_event', 'logging.add_log_event'),    
     (r'list_log_event_types', 'logging.list_log_event_types'),
     (r'get_log_events', 'logging.get_log_events'),
+
+    (r'set_dhcp_association', 'dhcp.set_dhcp_association'),
+    (r'delete_dhcp_association', 'dhcp.delete_dhcp_association'),
+
 )
 
 urlpatterns = patterns('api.views',
