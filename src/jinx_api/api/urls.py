@@ -34,6 +34,9 @@ api_calls = patterns('api.views',
     (r'get_si_images', 'pgi.get_si_images'),
     (r'delete_si_image', 'pgi.delete_si_image'),
     (r'add_si_image', 'pgi.add_si_image'),
+
+    (r'jinx_query_hostname_mac', 'jinx_query.jinx_query_hostname_mac'),
+    (r'jinx_query_rack', 'jinx_query.jinx_query_rack'),
 )
 
 urlpatterns = patterns('api.views',
