@@ -29,16 +29,23 @@ def set_dhcp_association(request, hostname, mac_address):
     
     hosts = llclusto.get_by_hostname(hostname)
 
-    if hosts:
-        for host in hosts:
-            for (port_type, port_num, ignore, ignore) in host.port_info_tuples:
-                if host.get_hostname(port_type, port_num) == hostname:
-                    host.del_hostname(port_type, port_num)
+    try:
+        clusto.begin_transaction()
 
-    for (port_type, port_num, ignore, ignore) in server.port_info_tuples:
-        if server.get_port_attr(port_type, port_num, "mac") == mac_address:
-            server.set_hostname(hostname, port_type, port_num)
+        if hosts:
+            for host in hosts:
+                for (port_type, port_num, ignore, ignore) in host.port_info_tuples:
+                    if host.get_hostname(port_type, port_num) == hostname:
+                        host.del_hostname(port_type, port_num)
 
+        for (port_type, port_num, ignore, ignore) in server.port_info_tuples:
+            if server.get_port_attr(port_type, port_num, "mac") == mac_address:
+                server.set_hostname(hostname, port_type, port_num)
+        
+        clusto.commit()
+    except:
+        clusto.rollback_transaction()
+        raise
 
 def delete_dhcp_association(request, hostname, mac_address):
     """
@@ -61,10 +68,18 @@ def delete_dhcp_association(request, hostname, mac_address):
     except IndexError:
         return HttpResponseInvalidState('Could not find any entities with MAC address: "%s".' % mac_address) 
 
-    for (port_type, port_num, ignore, ignore) in server.port_info_tuples:
-        if server.get_hostname(port_type, port_num) == hostname:
-            server.del_hostname(port_type, port_num)
+    try:
+        clusto.begin_transaction()
 
+        for (port_type, port_num, ignore, ignore) in server.port_info_tuples:
+            if server.get_hostname(port_type, port_num) == hostname:
+                server.del_hostname(port_type, port_num)
+
+        clusto.commit()
+    except:
+        clusto.rollback_transaction()
+        raise
+        
 
 
     
