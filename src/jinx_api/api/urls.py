@@ -37,6 +37,7 @@ api_calls = patterns('api.views',
 
     (r'jinx_query_hostname_mac', 'jinx_query.jinx_query_hostname_mac'),
     (r'jinx_query_rack', 'jinx_query.jinx_query_rack'),
+    (r'jinx_query_serial', 'jinx_query.jinx_query_serial'),
 )
 
 urlpatterns = patterns('api.views',

@@ -75,7 +75,8 @@ class TestGetRemoteHandsInfo(JinxTestCase):
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
                                          'colo': 'PHX',
-                                         'rack': "c3.03.2000"})
+                                         'rack': "c3.03.2000",
+                                         'type': "server"})
 
         response = self.do_api_call("aa:bb:cc:11:22:33")
         self.assert_response_code(response, 200)
@@ -85,7 +86,8 @@ class TestGetRemoteHandsInfo(JinxTestCase):
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
                                          'colo': 'PHX',
-                                         'rack': "c3.03.2000"})
+                                         'rack': "c3.03.2000",
+                                         'type': "server"})
 
         response = self.do_api_call("aa:bb:cc:11:22:34")
         self.assert_response_code(response, 200)
@@ -95,7 +97,8 @@ class TestGetRemoteHandsInfo(JinxTestCase):
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
                                          'colo': 'PHX',
-                                         'rack': "c3.03.2000"})
+                                         'rack': "c3.03.2000",
+                                         'type': "server"})
 
         response = self.do_api_call("hostname2.lindenlab.com")
         self.assert_response_code(response, 200)
@@ -105,7 +108,8 @@ class TestGetRemoteHandsInfo(JinxTestCase):
                                          'pdu_connections': [],
                                          'serial_number': 'SM55880',
                                          'colo': 'DFW',
-                                         'rack': "c1.01.1000"})
+                                         'rack': "c1.01.1000",
+                                         'type': "server"})
 
     def test_bad_call(self):
         response = self.do_api_call("huh?")
