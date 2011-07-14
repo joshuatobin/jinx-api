@@ -1,11 +1,5 @@
 # Django settings for jinx_api project.
 
-# Initialize clusto first:
-import clusto.scripthelpers
-
-clusto.scripthelpers.init_script()
-
-
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
