@@ -187,6 +187,8 @@ class JSONMiddleware(object):
         
         try:
             response_data = view(request, *args, **kwargs)
+            if clusto.SESSION.is_active:
+                raise Exception('SESSION IS STILL ACTIVE after running %s(%s, %s)' % (view.__name__, args, kwargs))
         except TypeError, e:
             # This will return an HTTP 400 with a body like this:
             #   the_function_name() takes 4 arguments (3 given)
