@@ -76,7 +76,7 @@ def get_current_pgi_image(request, hostname):
     """Returns the image assoicated with the hostname passed in.
 
     Returns:
-    A dictionary keyed on hostname. The value is the associated image name.
+    A string containing the associated image name.
 
     Arguments:
     hostname -- the hostname formatted as a string.
@@ -94,16 +94,16 @@ def get_current_pgi_image(request, hostname):
     host = hosts[0]
     
     if host.pgi_image is None:
-        return {}
+        return None
 
-    return {hostname : host.pgi_image.name}
+    return host.pgi_image.name
 
 
 def get_previous_pgi_image(request, hostname):
     """Returns the image that was previously assigned to the hostname.
 
     Returns:
-    A dictionary keyed on hostname. The value is the associated image name.
+    A string containing the associated image name.
     
     Arguments:
     hostname -- the hostname formatted as a string.
@@ -121,9 +121,9 @@ def get_previous_pgi_image(request, hostname):
     host = hosts[0]
 
     if host.previous_pgi_image is None:
-        return {}
+        return None
     else:
-        return {hostname : host.previous_pgi_image.name}
+        return host.previous_pgi_image.name
 
 
 def update_host_image_association(request, hostname, image_name):

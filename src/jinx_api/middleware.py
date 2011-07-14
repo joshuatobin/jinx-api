@@ -1,4 +1,5 @@
 import jinx_json
+import clusto.scripthelpers
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 from jinx_api.http import HttpResponseUnsupportedMediaType
 import functools
@@ -98,6 +99,14 @@ class APIDocumentationMiddleware(object):
 class JSONMiddleware(object):
     """Handle JSON requests and responses"""
 
+    def __init__(self):
+        self._initialized = False
+
+    def _initialize(self):
+        if not self._initialized:
+            clusto.scripthelpers.init_script()
+            self._initialized = True
+
     def process_view(self, request, view, view_args, view_kwargs):
         """Handle a JSON-based API call.
         
@@ -143,7 +152,9 @@ class JSONMiddleware(object):
                 deem appropriate.  See the documentation for each view function.
             
         """
-    
+        
+        self._initialize()
+        
         content_type = request.META['CONTENT_TYPE']
         method = request.META['REQUEST_METHOD']
         
@@ -176,6 +187,8 @@ class JSONMiddleware(object):
         
         try:
             response_data = view(request, *args, **kwargs)
+            if clusto.SESSION.is_active:
+                raise Exception('SESSION IS STILL ACTIVE after running %s(%s, %s)' % (view.__name__, args, kwargs))
         except TypeError, e:
             # This will return an HTTP 400 with a body like this:
             #   the_function_name() takes 4 arguments (3 given)

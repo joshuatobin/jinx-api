@@ -94,15 +94,15 @@ class TestGetCurrentPGIImage(JinxTestCase):
     def test_normal_call(self):
         response = self.do_api_call("hostname1")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, {"hostname1": "test image1"})
+        self.assertEqual(response.data, "test image1")
         image2 = PGIImage("test image2")
         self.host1.pgi_image = image2
         response = self.do_api_call("hostname1")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, {"hostname1": "test image2"})
+        self.assertEqual(response.data, "test image2")
         response = self.do_api_call("hostname2")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, {})
+        self.assertEqual(response.data, None)
         
     def test_bad_call(self):
         # hostname3 does not exist
@@ -126,17 +126,17 @@ class TestGetPreviousPGIImage(JinxTestCase):
     def test_normal_call(self):
         response = self.do_api_call("hostname1")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, {"hostname1": "test image1"})
+        self.assertEqual(response.data, "test image1")
 
         image3 = PGIImage("test image3")
         self.host1.pgi_image = image3
         response = self.do_api_call("hostname1")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, {"hostname1": "test image2"})
+        self.assertEqual(response.data, "test image2")
 
         response = self.do_api_call("hostname2")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, {})
+        self.assertEqual(response.data, None)
 
     def test_bad_call(self):
         # hostname3 does not exist

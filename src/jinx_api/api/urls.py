@@ -24,6 +24,9 @@ api_calls = patterns('api.views',
     (r'list_log_event_types', 'logging.list_log_event_types'),
     (r'get_log_events', 'logging.get_log_events'),
 
+    (r'set_dhcp_association', 'dhcp.set_dhcp_association'),
+    (r'delete_dhcp_association', 'dhcp.delete_dhcp_association'),
+
     (r'list_servable_pgi_images', 'pgi.list_servable_pgi_images'),
     (r'get_hosts_with_image', 'pgi.get_hosts_with_image'),
     (r'list_host_image_associations', 'pgi.list_host_image_associations'),
