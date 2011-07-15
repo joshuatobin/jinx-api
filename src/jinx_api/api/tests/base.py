@@ -4,7 +4,10 @@ import clusto
 import llclusto
 import jinx_json
 
+from sqlalchemy import create_engine
 
+# due to some vagary of sqlalchemy, if I don't do this at the global scope, the stuff in setUp() doesn't work.  Bah.
+clusto.SESSION.configure(bind=create_engine('sqlite:///:memory:'))
 
 class JinxTestCase(TestCase):
     """A helper base class to make designing tests for API calls easier"""
