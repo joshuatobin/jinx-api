@@ -48,17 +48,16 @@ def _get_device_info(request, device):
     try:
         port_info = device.port_info
         
-        # If the host doesn't have power connections, maybe it's a class 7 in a chassis.  Try that.
-        if 'pwr-nema-5' not in port_info:
-            chassis = llclusto.drivers.LindenServerChassis.get_chassis(device)
-            port_info = chassis.port_info
-        
-        info['pdu_connections'] = []
+        # If the host doesn't have power connections, maybe it has ipmi
+        if device.has_ipmi():
+            info['pdu_connections'] = device.ipmi[0]
+        else:
+            info['pdu_connections'] = []
 
-        for port_num in port_info['pwr-nema-5']:
-            if port_info['pwr-nema-5'][port_num]['connection']:
-                info['pdu_connections'].append({'pdu': port_info['pwr-nema-5'][port_num]['connection'].hostname,
-                                                'port': port_info['pwr-nema-5'][port_num]['otherportnum']})
+            for port_num in port_info['pwr-nema-5']:
+                if port_info['pwr-nema-5'][port_num]['connection']:
+                    info['pdu_connections'].append({'pdu': port_info['pwr-nema-5'][port_num]['connection'].hostname,
+                                                    'port': port_info['pwr-nema-5'][port_num]['otherportnum']})
     except (KeyError, AttributeError, IndexError):
         info['pdu_connections'] = []
     
