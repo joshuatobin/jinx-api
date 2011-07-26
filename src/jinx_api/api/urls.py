@@ -44,6 +44,8 @@ api_calls = patterns('api.views',
 
     (r'^create_dns_service_group$', 'dns.create_dns_service_group'),
     (r'^create_dns_hostname_record$', 'dns.create_dns_hostname_record'),
+    (r'^add_dns_hostname_record_comment$', 'dns.add_dns_hostname_record_comment'),
+    (r'^get_dns_hostname_record_comment$', 'dns.get_dns_hostname_record_comment'),
     (r'^delete_dns_service_group$', 'dns.delete_dns_service_group'),
     (r'^set_dns_service_group$', 'dns.set_dns_service_group'),
     (r'^unset_dns_service_group$', 'dns.unset_dns_service_group'),

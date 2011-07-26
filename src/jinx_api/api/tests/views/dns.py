@@ -19,6 +19,27 @@ class TestCreateDnsHostnameRecord(JinxTestCase):
         self.assert_response_code(response, 409)
         self.assertEqual(response.data, "DNS hostname record: jinx.lindenlab.com already exists.")
         
+class TestAddDnsHostnameRecordComment(JinxTestCase):
+    api_call_path = "/jinx/2.0/add_dns_hostname_record_comment"
+
+    def data(self):
+        DNSRecord("jinx.lindenlab.com")
+
+    def test_normal_call(self):
+        response = self.do_api_call("jinx.lindenlab.com", "Fancy New A Record Comment")
+        self.assert_response_code(response, 200)
+
+class TestGetDnsHostnameRecordComment(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_dns_hostname_record_comment"
+
+    def data(self):
+        host = DNSRecord("jinx.lindenlab.com")
+        host.comment = "Fancy new MX Record"
+
+    def test_normal_call(self):
+        response = self.do_api_call("jinx.lindenlab.com")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, "Fancy new MX Record")
 
 class TestCreateDnsServiceGroup(JinxTestCase):
     api_call_path = "/jinx/2.0/create_dns_service_group"

@@ -42,6 +42,39 @@ def create_dns_hostname_record(response, dns_hostname):
     else:
        return 'DNS hostname: %s created successfully.' % dns_hostname
 
+def add_dns_hostname_record_comment(response, dns_hostname, comment):
+    """ Adds a comment to a dns hostname record.
+
+    Arguments:
+        dns_hostname -- The dns hostname of a record.
+        comment      -- Comment
+
+    Exceptions Raised:
+         JinxInvalidStateError -- The requested dns_hostname does not exists
+    """
+
+    host = _get_dns_hostname_instance(response, dns_hostname)
+    
+    if isinstance(host, HttpResponse):
+        return host
+
+    host.comment = comment
+
+def get_dns_hostname_record_comment(response, dns_hostname):
+    """ Get the comment from a dns hostname record.
+
+    Arguments:
+        dns_hostname -- The dns hostname of a record.
+    """
+    host = _get_dns_hostname_instance(response, dns_hostname)
+    
+    if isinstance(host, HttpResponse):
+        return host
+
+    comment = str(host.comment)
+
+    return comment
+        
 def create_dns_service_group(response, service_group):
     """Create a dns service group to logically group dns records.
 
