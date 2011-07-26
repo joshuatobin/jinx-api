@@ -41,6 +41,16 @@ api_calls = patterns('api.views',
     (r'jinx_query_hostname_mac', 'jinx_query.jinx_query_hostname_mac'),
     (r'jinx_query_rack', 'jinx_query.jinx_query_rack'),
     (r'jinx_query_serial', 'jinx_query.jinx_query_serial'),
+
+    (r'^create_dns_service_group$', 'dns.create_dns_service_group'),
+    (r'^create_dns_hostname_record$', 'dns.create_dns_hostname_record'),
+    (r'^delete_dns_service_group$', 'dns.delete_dns_service_group'),
+    (r'^set_dns_service_group$', 'dns.set_dns_service_group'),
+    (r'^unset_dns_service_group$', 'dns.unset_dns_service_group'),
+    (r'^get_all_dns_service_groups$', 'dns.get_all_dns_service_groups'),
+    (r'^get_dns_service_group$', 'dns.get_dns_service_group'),
+    (r'^get_dns_service_group_members$', 'dns.get_dns_service_group_members'),
+    
 )
 
 urlpatterns = patterns('api.views',
