@@ -25,40 +25,23 @@ def _get_dns_hostname_instance(response, dns_hostname):
     else:
         return dns_hostname
 
-def create_dns_hostname_record(response, dns_hostname):
-    """ Creates a DNS hostname record
-
-    Arguments:
-        dns_hostname -- The dns hostname of a record.
-
-    Exceptions Raised:
-         JinxInvalidStateError -- The requested dns_hostname name already exists.
-    """
-
-    try:
-        DNSRecord(dns_hostname)
-    except NameException:
-       return HttpResponseInvalidState("DNS hostname record: %s already exists." % dns_hostname)        
-    else:
-       return 'DNS hostname: %s created successfully.' % dns_hostname
-
-def add_dns_hostname_record_comment(response, dns_hostname, comment):
-    """ Adds a comment to a dns hostname record.
+def add_dns_record_comment(response, dns_hostname, comment):
+    """ Adds a comment to a dns record. If the dns record dose not exist we create one.
 
     Arguments:
         dns_hostname -- The dns hostname of a record.
         comment      -- Comment
 
-    Exceptions Raised:
-         JinxInvalidStateError -- The requested dns_hostname does not exists
     """
-
-    host = _get_dns_hostname_instance(response, dns_hostname)
-    
-    if isinstance(host, HttpResponse):
-        return host
-
-    host.comment = comment
+    try:
+        dns_record = clusto.get_by_name(dns_hostname)
+    except LookupError:
+        dns_record = DNSRecord(dns_hostname)
+        dns_record.comment = comment
+        return 'DNS record and comment added: %s: %s.' % (dns_hostname, comment)
+    else:
+        dns_record.comment = comment        
+        return 'DNS comment added: %s.' % comment
 
 def get_dns_hostname_record_comment(response, dns_hostname):
     """ Get the comment from a dns hostname record.
@@ -75,22 +58,27 @@ def get_dns_hostname_record_comment(response, dns_hostname):
 
     return comment
         
-def create_dns_service_group(response, service_group):
+def create_dns_service_group(response, service_group, comment):
     """Create a dns service group to logically group dns records.
 
     Arguments:
          service_group -- The service group name.
+         comment       -- A comment about the service group.
 
     Exceptions Raised:
          JinxInvalidStateError -- The requested service_group name already exists.
     """
+
     try:
-        DNSService(service_group)
-    except NameException:
-       return HttpResponseInvalidState("DNS service group %s already exists." % service_group)
+        pool = clusto.get_by_name(service_group)
+    except LookupError:
+        pool = DNSService(service_group)
+        pool.comment = comment
+        return 'DNS service and comment added: %s: %s.' % (service_group, comment)
     else:
-        return 'DNS service group: %s created successfully.' % service_group
-    
+        pool.comment = comment
+        return 'DNS service added: %s.' % comment
+
 def delete_dns_service_group(response, service_group):
     """ Deletes a DNS service group. The service group must not contain any records.
 
@@ -114,7 +102,7 @@ def delete_dns_service_group(response, service_group):
         clusto.delete_entity(pool.entity)
         return "Successfully deleted service group: %s." % service_group
 
-def set_dns_service_group(response, dns_hostname, service_group):
+def add_dns_service_group(response, dns_hostname, service_group):
     """Adds a dns host record to a dns service group.
 
     Arguments:
@@ -142,7 +130,7 @@ def set_dns_service_group(response, dns_hostname, service_group):
     else:
         return "DNS host record: %s successfully added to: %s service group." % (dns_record.name, service_group)
     
-def unset_dns_service_group(response, dns_hostname, service_group):
+def remove_dns_service_group(response, dns_hostname, service_group):
     """Removes a dns host record from service group.
 
     Arguments:
@@ -172,8 +160,8 @@ def unset_dns_service_group(response, dns_hostname, service_group):
     else:
         return HttpResponseInvalidState("%s not found in dns service group: %s." % (dns_record.name, pool.name))
 
-def get_dns_service_group(response, dns_hostname):
-    """ Returns a list of service groups a dns hostname belongs to
+def get_dns_record_service_groups(response, dns_hostname):
+    """ Returns a list of service groups a dns hostname belongs to.
 
     Arguments:
          dns_hostname -- The dns_hostname of a record.
@@ -196,7 +184,7 @@ def get_all_dns_service_groups(response):
 
     return [x.name for x in groups]
 
-def get_dns_service_group_members(response, service_group):
+def get_dns_service_group_info(response, service_group):
     """Returns a list of all memebers in a DNS Service group.
 
     Arguments:
@@ -208,5 +196,11 @@ def get_dns_service_group_members(response, service_group):
     if isinstance(pool, HttpResponse):
         return pool
 
-    return [x.name for x in pool.contents()]
+    info = {}
+
+    members = [x.name for x in pool.contents()]
+
+    info['description'] = str(pool.comment)
+    info['members'] = members
     
+    return info

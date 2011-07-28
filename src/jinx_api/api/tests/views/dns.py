@@ -3,31 +3,21 @@ import clusto
 from llclusto.drivers import DNSRecord, DNSService, HostState
 import sys
 
-class TestCreateDnsHostnameRecord(JinxTestCase):
-    api_call_path = "/jinx/2.0/create_dns_hostname_record"
+class TestAddDnsRecordComment(JinxTestCase):
+    api_call_path = "/jinx/2.0/add_dns_record_comment"
 
     def data(self):
-        DNSRecord("jinx.lindenlab.com")
-
-    def test_normal_call(self):
-        response = self.do_api_call("hostname.lindenlab.com")
-        self.assert_response_code(response, 200)
-        self.assertEqual(response.data, "DNS hostname: hostname.lindenlab.com created successfully.")
-
-    def test_bad_call(self):
-        response = self.do_api_call("jinx.lindenlab.com")
-        self.assert_response_code(response, 409)
-        self.assertEqual(response.data, "DNS hostname record: jinx.lindenlab.com already exists.")
-        
-class TestAddDnsHostnameRecordComment(JinxTestCase):
-    api_call_path = "/jinx/2.0/add_dns_hostname_record_comment"
-
-    def data(self):
-        DNSRecord("jinx.lindenlab.com")
+        host = DNSRecord("jinx.lindenlab.com")
+        host.comment = "new jinx A record"
 
     def test_normal_call(self):
         response = self.do_api_call("jinx.lindenlab.com", "Fancy New A Record Comment")
         self.assert_response_code(response, 200)
+        self.assertEqual(response.data, "DNS comment added: Fancy New A Record Comment.") # Should overwrite the original comment
+
+        response = self.do_api_call("jinx-staging.lindenlab.com", "new jinx MX record")
+        self.assert_response_code(response, 200) # Should create the record and add a comment
+        self.assertEqual(response.data, "DNS record and comment added: jinx-staging.lindenlab.com: new jinx MX record.") 
 
 class TestGetDnsHostnameRecordComment(JinxTestCase):
     api_call_path = "/jinx/2.0/get_dns_hostname_record_comment"
@@ -45,19 +35,18 @@ class TestCreateDnsServiceGroup(JinxTestCase):
     api_call_path = "/jinx/2.0/create_dns_service_group"
 
     def data(self):
-        DNSService("bacula")
+        service = DNSService("bacula")
+        service.comment = "new bacula comment"
 
     def test_normal_call(self):
-        response = self.do_api_call("webservers")
+        response = self.do_api_call("bacula", "Fancy New Comment")
         self.assert_response_code(response, 200)
-        self.assertEqual(response.data, "DNS service group: webservers created successfully.")
+        self.assertEqual(response.data, "DNS service added: Fancy New Comment.") # Should overwrite the original comment
 
-
-    def test_bad_call(self):
-        response = self.do_api_call("bacula")
-        self.assert_response_code(response, 409)
-        self.assertEqual(response.data, "DNS service group bacula already exists.")
-
+        response = self.do_api_call("websters", "New Webster")
+        self.assert_response_code(response, 200) # Should create the record and add a comment
+        self.assertEqual(response.data, "DNS service and comment added: websters: New Webster.") 
+        
 class TestDeleteDnsServiceGroup(JinxTestCase):
     api_call_path = "/jinx/2.0/delete_dns_service_group"
 
@@ -80,8 +69,8 @@ class TestDeleteDnsServiceGroup(JinxTestCase):
         response = self.do_api_call("test0")
         self.assert_response_code(response, 409)
 
-class TestSetDnsServiceGroup(JinxTestCase):
-    api_call_path = "/jinx/2.0/set_dns_service_group"
+class TestAddDnsServiceGroup(JinxTestCase):
+    api_call_path = "/jinx/2.0/add_dns_service_group"
 
     def data(self):
         group0 = DNSService("group0")
@@ -101,8 +90,8 @@ class TestSetDnsServiceGroup(JinxTestCase):
         self.assert_response_code(response, 409)
         self.assertEqual(response.data, "DNS host record: jinx0.lindenlab.com already exists in service group: group0.")
 
-class TestUnsetDnsServiceGroup(JinxTestCase):
-    api_call_path = "/jinx/2.0/unset_dns_service_group"
+class TestRemoveDnsServiceGroup(JinxTestCase):
+    api_call_path = "/jinx/2.0/remove_dns_service_group"
 
     def data(self):
         group0 = DNSService("group0")
@@ -123,8 +112,8 @@ class TestUnsetDnsServiceGroup(JinxTestCase):
         self.assertEqual(response.data, "jinx1.lindenlab.com not found in dns service group: group1.")
 
 
-class TestGetDnsServiceGroup(JinxTestCase):
-    api_call_path = "/jinx/2.0/get_dns_service_group"
+class TestGetDnsRecordServiceGroups(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_dns_record_service_groups"
 
     def data(self):
         group1 = DNSService("test1")
@@ -142,7 +131,6 @@ class TestGetDnsServiceGroup(JinxTestCase):
         self.assert_response_code(response, 200)
         self.assertEqual(sorted(response.data), sorted(["test1", "test2", "test3"]))
 
-
 class TestGetAllDnsServiceGroups(JinxTestCase):
     api_call_path = "/jinx/2.0/get_all_dns_service_groups"
 
@@ -157,11 +145,12 @@ class TestGetAllDnsServiceGroups(JinxTestCase):
         self.assertEqual(sorted(response.data), sorted(["group0", "group1", "group2"]))
 
 
-class TestGetDnsServiceGroupMembers(JinxTestCase):
-    api_call_path = "/jinx/2.0/get_dns_service_group_members"
+class TestGetDnsServiceGroupInfo(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_dns_service_group_info"
 
     def data(self):
         group0 = DNSService("websters")
+        group0.comment = "new comment"
 
         host0 = DNSRecord("host0.lindenlab.com")
         host1 = DNSRecord("host1.lindenlab.com")
@@ -174,4 +163,5 @@ class TestGetDnsServiceGroupMembers(JinxTestCase):
     def test_normal_call(self):
         response = self.do_api_call("websters")
         self.assert_response_code(response, 200)
-        self.assertEqual(sorted(response.data), sorted(["host0.lindenlab.com", "host1.lindenlab.com", "host2.lindenlab.com"]))
+        self.assertEqual(sorted(response.data), \
+                             sorted({'description': 'new comment', 'members': ['host0.lindenlab.com', 'host1.lindenlab.com', 'host2.lindenlab.com']}))
