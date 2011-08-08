@@ -51,6 +51,8 @@ api_calls = patterns('api.views',
     (r'^get_all_dns_service_groups$', 'dns.get_all_dns_service_groups'),
     (r'^get_dns_service_group_info$', 'dns.get_dns_service_group_info'),
     (r'^get_dns_record_service_groups$', 'dns.get_dns_record_service_groups'),
+    (r'^get_dns_records_comments$', 'dns.get_dns_records_comments'),
+    (r'^get_dns_service_group_members_info$', 'dns.get_dns_service_group_members_info'),
     
 )
 

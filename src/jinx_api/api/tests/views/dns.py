@@ -170,3 +170,62 @@ class TestGetDnsServiceGroupInfo(JinxTestCase):
         self.assert_response_code(response, 200)
         self.assertEqual(sorted(response.data), \
                              sorted({'description': 'new comment', 'members': ['host0.lindenlab.com', 'host1.lindenlab.com', 'host2.lindenlab.com']}))
+
+
+class TestGetDnsRecordsComments(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_dns_records_comments"
+
+    def data(self):
+        host0 = DNSRecord("host0.lindenlab.com")
+        host1 = DNSRecord("host1.lindenlab.com")
+        host2 = DNSRecord("host2.lindenlab.com")
+
+        host0.comment = "host 0 comment"
+        host1.comment = "host 1 comment"
+        host2.comment = "host 2 comment"
+
+    def test_normal_call(self):
+        response = self.do_api_call(['host0.lindenlab.com', 'host1.lindenlab.com', 'host2.lindenlab.com'])
+        self.assert_response_code(response, 200)
+        self.assertEqual(sorted(response.data), \
+                             sorted({'host0.lindenlab.com':'host 0 comment',\
+                                     'host1.lindenlab.com':'host 1 comment',\
+                                     'host2.lindenlab.com':'host 2 comment'}))
+
+    def test_bad_call(self):
+        response = self.do_api_call('some bad string')
+        self.assert_response_code(response, 400) # should throw a 400 if a list isn't passed.
+
+
+class TestGetDnsServiceGroupMembersInfo(JinxTestCase):
+    api_call_path = "/jinx/2.0/get_dns_service_group_members_info"
+
+    def data(self):
+        host0 = DNSRecord("host0.lindenlab.com")
+        host1 = DNSRecord("host1.lindenlab.com")
+        host2 = DNSRecord("host2.lindenlab.com")
+
+        host0.comment = "host 0 comment"
+        host1.comment = "host 1 comment"
+        host2.comment = "host 2 comment"
+
+        group0 = DNSService("websters")
+        group0.comment = "Webster DNS Group"
+
+        group1 = DNSService("bacula")
+        group1.comment = "bacula group"
+
+        group0.insert(host0)
+        group0.insert(host1)
+
+        group1.insert(host0)
+        group1.insert(host2)
+
+    def test_normal_call(self):
+        response = self.do_api_call(['host0.lindenlab.com', 'host1.lindenlab.com', 'host2.lindenlab.com'])
+        self.assert_response_code(response, 200)
+        self.assertEqual(sorted(response.data), sorted({u'websters': \
+                                                    {u'description': u'Webster DNS Group', \
+                                                     u'members': [u'host0.lindenlab.com', u'host1.lindenlab.com']},\
+                                         u'bacula': {u'description': u'bacula group', \
+                                                     u'members': [u'host0.lindenlab.com', u'host2.lindenlab.com']}}))

@@ -1,7 +1,8 @@
 import jinx_json
 import clusto.scripthelpers
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
-from jinx_api.http import HttpResponseUnsupportedMediaType
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseNotFound
+from jinx_api.http import HttpResponseUnsupportedMediaType, HttpResponseInvalidState
+from jinx_client.jinx_exceptions import *
 import functools
 import traceback
 import sys
@@ -182,23 +183,25 @@ class JSONMiddleware(object):
         except TypeError, e:
             # This will return an HTTP 400 with a body like this:
             #   the_function_name() takes 4 arguments (3 given)
-            response = HttpResponseBadRequest(str(e))
-            
-            # This counts as an error in the API call, so add a header:
-            response['X-Jinx-Error-Source'] = 'api'
-            
-            return response
+            response_data = HttpResponseBadRequest(str(e))
+        except JinxInvalidRequestError, e:
+            response_data = HttpResponseBadRequest(str(e))
+        except JinxActionForbiddenError, e:
+            response_data = HttpResponseForbidden(str(e))
+        except JinxDataNotFoundError, e:
+            response_data = HttpResponseNotFound(str(e))
+        except JinxInvalidStateError, e:
+            response_data = HttpResponseInvalidState(str(e))
         except:
             exception_traceback = traceback.format_exception(*sys.exc_info())
             
             #print >> sys.stderr, "Unhandled exception from view:"
             #print >> sys.stderr, exception_traceback
             
-            response = HttpResponseServerError(exception_traceback, mimetype='text/plain')
-            response['X-Jinx-Error-Source'] = 'api'
-            return response
+            response_data = HttpResponseServerError(exception_traceback, mimetype='text/plain')
         
-        # Let the view return an HTTP response directly if it wants to, e.g. HttpResponseNotFound
+        # At this point, if response_data is an HttpResponse subclass, mark the
+        # error as having come from the API call and send it back
         if isinstance(response_data, HttpResponse):
             response_data['X-Jinx-Error-Source'] = 'api'
             return response_data

@@ -186,7 +186,7 @@ def get_all_dns_service_groups(response):
     return [x.name for x in groups]
 
 def get_dns_service_group_info(response, service_group):
-    """Returns a list of all memebers in a DNS Service group.
+    """Returns a dictionary of all memebers in a DNS Service group.
 
     Arguments:
          service_group -- The service group name.
@@ -204,4 +204,63 @@ def get_dns_service_group_info(response, service_group):
     info['description'] = str(pool.comment)
     info['members'] = members
     
+    return info
+
+def get_dns_records_comments(response, list_of_records):
+    """Returns a dictionary of dns record comments.
+
+    Arguments:
+        list_of_records -- A list of dns hostname records.
+
+    Exceptions Raised:
+        JinxInvalidRequestError - The list_of_records is not of the type list.
+    """
+
+    if type(list_of_records) != list:
+        raise HttpResponseBadRequest("Error: Please provide a list of records")
+
+    comments = {}
+
+    for record in list_of_records:
+        try:
+            dns_record = clusto.get_by_name(record)
+        except LookupError:
+            continue
+
+        if dns_record.comment:
+                 comments[dns_record.name] = dns_record.comment
+
+    return comments
+    
+def get_dns_service_group_members_info(response, list_of_records):
+    """Returns a dictionary containing the service groups a record belongs to
+    along with the comment for the service group
+
+    Arguments:
+        list_of_records -- A list of dns hostname records.
+
+    Exceptions Raised:
+        JinxInvalidRequestError - The list_of_records is not of the type list.
+    """
+
+    if type(list_of_records) != list:
+        raise HttpResponseBadRequest("Error: Please provide a list of records")
+
+    info = {}
+
+    for record in list_of_records:
+        try:
+            dns_record = clusto.get_by_name(record)
+        except LookupError:
+            continue
+        
+        service_groups = dns_record.parents(clusto_types=['pool'], clusto_drivers=['dnsservice'])        
+    
+        if service_groups:
+            for group in service_groups:
+                if group not in info:
+                    info[group.name] = {}
+                    info[group.name]['members'] = [x.name for x in group.contents()]
+                    info[group.name]['description'] = group.comment
+
     return info

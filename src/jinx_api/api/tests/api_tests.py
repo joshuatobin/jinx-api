@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.http import HttpResponseNotFound, HttpResponseServerError
 from django.conf.urls.defaults import patterns, include
+from jinx_client.jinx_exceptions import *
 import jinx_json
 import views
 import datetime
@@ -17,6 +18,10 @@ urlpatterns = patterns('api.tests.api_tests',
     (r'test_view_one_default_argument', 'test_view_one_default_argument'),
     (r'test_view_two_default_arguments', 'test_view_two_default_arguments'),
     (r'test_doc', 'test_doc'),
+    (r'test_raise_bad_request', 'test_raise_bad_request'),
+    (r'test_raise_forbidden', 'test_raise_forbidden'),
+    (r'test_raise_data_not_found', 'test_raise_data_not_found'),
+    (r'test_raise_invalid_state', 'test_raise_invalid_state'),
 )
 
 
@@ -66,6 +71,17 @@ def test_doc(request, arg1, arg2=3):
     
     pass
     
+def test_raise_bad_request(request):
+    raise JinxInvalidRequestError()
+
+def test_raise_forbidden(request):
+    raise JinxActionForbiddenError()
+    
+def test_raise_data_not_found(request):
+    raise JinxDataNotFoundError()
+    
+def test_raise_invalid_state(request):
+    raise JinxInvalidStateError()
 
 # Django's default 404 and 500 handlers want templates, 404.html and 500.html.
 # I define new handlers here that don't care about templates.
@@ -247,5 +263,17 @@ Note: This documentation string is used as part of the test.
         self.assertEquals(response.content, expected_documentation,
             "Documentation did not match expected value... perhaps whitespace was not stripped properly?")
         
+    def test_api_call_exceptions(self):
+        response = self._post_json("/test_raise_bad_request", {'args': [], 'kwargs': {}})
+        self._assert_call_status_code(response, 400, 'View raising JinxInvalidRequestError should result in HTTP 400.')
+        
+        response = self._post_json("/test_raise_forbidden", {'args': [], 'kwargs': {}})
+        self._assert_call_status_code(response, 403, 'View raising JinxActionForbiddenError should result in HTTP 403.')
+        
+        response = self._post_json("/test_raise_data_not_found", {'args': [], 'kwargs': {}})
+        self._assert_call_status_code(response, 404, 'View raising JinxDataNotFoundError should result in HTTP 404.')
+        
+        response = self._post_json("/test_raise_invalid_state", {'args': [], 'kwargs': {}})
+        self._assert_call_status_code(response, 409, 'View raising JinxInvalidStateError should result in HTTP 409.')
+        
 
-    
