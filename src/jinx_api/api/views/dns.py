@@ -112,15 +112,16 @@ def add_dns_service_group(response, dns_hostname, service_group):
     Exceptions Raised:
          JinxInvalidStateError -- The dns_hostname already exists in service_group.
     """
-    dns_record = _get_dns_hostname_instance(response, dns_hostname)
 
     pool = _get_dns_service_group_instance(response, service_group)
         
-    if isinstance(dns_record, HttpResponse):
-        return dns_record
-
     if isinstance(pool, HttpResponse):
         return pool
+
+    try:
+        dns_record = clusto.get_by_name(dns_hostname)
+    except LookupError:
+        dns_record = DNSRecord(dns_hostname)
 
     try:
         pool.insert(dns_record)

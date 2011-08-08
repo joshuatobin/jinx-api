@@ -85,6 +85,11 @@ class TestAddDnsServiceGroup(JinxTestCase):
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, "DNS host record: jinx1.lindenlab.com successfully added to: group1 service group.")
 
+    def test_normal_call(self):
+        response = self.do_api_call("jinx3.lindenlab.com", "group1")
+        self.assert_response_code(response, 200)
+        self.assertEqual(response.data, "DNS host record: jinx3.lindenlab.com successfully added to: group1 service group.")
+
     def test_bad_call(self):
         response = self.do_api_call("jinx0.lindenlab.com", "group0")
         self.assert_response_code(response, 409)
