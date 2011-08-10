@@ -2,7 +2,8 @@
 
 # Initialize connection to clusto database:
 import clusto.scripthelpers
-
+import os
+import re
 clusto.scripthelpers.init_script()
 
 DEBUG = True
