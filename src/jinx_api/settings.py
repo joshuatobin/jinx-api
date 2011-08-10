@@ -101,9 +101,9 @@ MIDDLEWARE_CLASSES = (
 #    'django.middleware.csrf.CsrfViewMiddleware',
 #    'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.contrib.messages.middleware.MessageMiddleware',
-    'jinx_api.middleware.JSONMiddleware',
     'jinx_api.middleware.APIDocumentationMiddleware',
     'jinx_api.middleware.JinxAuthorizationMiddleware',
+    'jinx_api.middleware.JSONMiddleware',
 )
 
 ROOT_URLCONF = 'jinx_api.urls'
@@ -122,7 +122,7 @@ INSTALLED_APPS = (
 #    'django.contrib.sites',
 #    'django.contrib.messages',
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+#    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
