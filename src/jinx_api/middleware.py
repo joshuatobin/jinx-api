@@ -145,6 +145,12 @@ class JSONMiddleware(object):
                 deem appropriate.  See the documentation for each view function.
             
         """
+
+        # HACK to fix unit testing
+        # This makes it so that this middleware only operates on urls we care about for Jinx
+        # and leaves alone urls used during unit testing for the admin interface.
+        if not request.path.startswith("/jinx/") and not request.path.startswith("/test_"):
+            return None
         
         content_type = request.META['CONTENT_TYPE']
         method = request.META['REQUEST_METHOD']
