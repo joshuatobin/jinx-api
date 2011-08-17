@@ -102,11 +102,16 @@ MIDDLEWARE_CLASSES = (
 #    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.contrib.messages.middleware.MessageMiddleware',
+#    'django.contrib.auth.middleware.AuthenticationMiddleware',
+#    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'jinx_api.middleware.APIDocumentationMiddleware',
     'jinx_api.middleware.JinxAuthorizationMiddleware',
     'jinx_api.middleware.JSONMiddleware',
-
 )
+
+#AUTHENTICATION_BACKENDS = (
+#        'django.contrib.auth.backends.RemoteUserBackend',
+#        )
 
 ROOT_URLCONF = 'jinx_api.urls'
 

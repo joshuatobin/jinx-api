@@ -3,10 +3,9 @@ from django.db import models
 class DNSService(models.Model):
     name = models.CharField(max_length=100, unique=True)
     comment = models.CharField(max_length=255)
-    # add text field
-    def __unicode__(self):
-        return self.name + ':' + self.comment
 
+    def __unicode__(self):
+        return self.name
 
 class DNSRecord(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -15,4 +14,17 @@ class DNSRecord(models.Model):
 
     def __unicode__(self):
         return self.name
-    
+
+    class Admin:
+        list_display = ('name', 'comment', 'group')
+        
+class Lock(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    value = models.IntegerField()
+
+    def __unicode__(self):
+        return self.name
+
+
+
+

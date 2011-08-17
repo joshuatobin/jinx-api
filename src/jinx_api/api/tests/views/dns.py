@@ -53,6 +53,9 @@ class TestGetDnsRecordComment(JinxTestCase):
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, "Crazy Comment!")
 
+        record = DNSRecord.objects.get(name='crazyhost.lindenlab.com')
+        self.assertEqual(record.comment, "Crazy Comment!")
+
 class TestSetDnsRecordComment(JinxTestCase):
     api_call_path = "/jinx/2.0/set_dns_record_comment"
 
@@ -72,6 +75,11 @@ class TestCreateDnsServiceGroup(JinxTestCase):
         response = self.do_api_call("HWLB", "HWLB group")
         self.assert_response_code(response, 200)
         self.assertEqual(response.data, True)
+
+        service = DNSService.objects.get(name='webster')
+        self.assertEqual(service.name, 'webster')
+        self.assertEqual(service.comment, 'webster group')
+        
         
 class TestSetDnsServiceGroup(JinxTestCase):
     api_call_path = "/jinx/2.0/set_dns_service_group"
