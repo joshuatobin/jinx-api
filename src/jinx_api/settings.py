@@ -9,6 +9,8 @@ clusto.scripthelpers.init_script()
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
+
 # load global settings from jinx.conf
 # if this variable is passed in from some external, non-local invocation, respect the 
 # passed conf file location, which is relative to the local directory.  Otherwise, set 
@@ -119,10 +121,13 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(PROJECT_PATH, 'templates'),
+#    os.path.join(PROJECT_PATH, 'api', 'templates'),
 )
 
 INSTALLED_APPS = (
     'jinx_api.api',
+#    'jinx_api.ui',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
