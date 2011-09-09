@@ -246,7 +246,7 @@ class JinxAPITests(TestCase):
     
     def test_doc(self):
         expected_documentation = \
-"""test_doc(arg1, arg2=3):
+"""_test_doc(arg1, arg2=3):
 Test fetching of documentation strings.
 
 Note: This documentation string is used as part of the test.
