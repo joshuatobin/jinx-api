@@ -50,6 +50,16 @@ DATABASE_HOST = jinx_global_settings['DB_JINX_DATABASE_HOST']  # Set to empty st
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 DATABASE_OPTIONS = {"init_command": "SET storage_engine=INNODB",}
 
+# ldap configuration settings. 
+
+LDAP_SERVER='ldaps://ldap-a.lindenlab.com/'
+LDAP_SEARCH_TREE='ou=group,dc=lindenlab,dc=com'
+LDAP_FILTER='(cn=ops)'
+LDAP_FIELD='memberUid'
+LDAP_PASSWD='1loveld4p'
+LDAP_BIND_DN='cn=unix,ou=system,dc=lindenlab,dc=com'
+ALL_USERS_GROUP=1
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -105,15 +115,20 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.contrib.messages.middleware.MessageMiddleware',
 #    'django.contrib.auth.middleware.AuthenticationMiddleware',
-#    'django.contrib.auth.middleware.RemoteUserMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'jinx_api.middleware.APIDocumentationMiddleware',
     'jinx_api.middleware.JinxAuthorizationMiddleware',
     'jinx_api.middleware.JSONMiddleware',
+    
 )
 
-#AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = (
+        'jinx_api.LdapRemoteUserBackend.LDAPRemoteUserBackend',
 #        'django.contrib.auth.backends.RemoteUserBackend',
-#        )
+       )
+
+# User profiles
+AUTH_PROFILE_MODULE = 'api.UserProfile'
 
 ROOT_URLCONF = 'jinx_api.urls'
 
@@ -125,17 +140,22 @@ TEMPLATE_DIRS = (
 #    os.path.join(PROJECT_PATH, 'api', 'templates'),
 )
 
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
 INSTALLED_APPS = (
     'jinx_api.api',
-#    'jinx_api.ui',
+    'jinx_api.ui',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django_nose',
 #    'django.contrib.messages',
     # Uncomment the next line to enable the admin:
 
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+

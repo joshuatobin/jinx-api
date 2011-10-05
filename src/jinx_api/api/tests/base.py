@@ -6,6 +6,7 @@ import jinx_json
 
 from sqlalchemy import create_engine
 
+
 # due to some vagary of sqlalchemy, if I don't do this at the global scope, the stuff in setUp() doesn't work.  Bah.
 clusto.SESSION.configure(bind=create_engine('sqlite:///:memory:'))
 
@@ -30,7 +31,7 @@ class JinxTestCase(TestCase):
         clusto.SESSION.close()
         clusto.init_clusto()
         self.data()
-        
+
     def tearDown(self):
         if clusto.SESSION.is_active:
             raise Exception("SESSION IS STILL ACTIVE in %s" % str(self.__class__))
@@ -38,8 +39,7 @@ class JinxTestCase(TestCase):
         clusto.clear()
         clusto.disconnect()
         clusto.METADATA.drop_all(clusto.SESSION.bind)
-        
-        
+
     def data(self):
         pass
         

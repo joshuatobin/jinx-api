@@ -1,6 +1,10 @@
+from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+
 from api.tests.base import JinxTestCase
 import clusto
-from llclusto.drivers import LindenPDU
+from llclusto.drivers import LindenPDU, ServerClass, HostState, Class5Server
 import sys
 
 class TestGetPduHostnames(JinxTestCase):
@@ -18,3 +22,4 @@ class TestGetPduHostnames(JinxTestCase):
         self.assert_response_code(response, 200)
         self.assertEqual(sorted(response.data), ["pdu1.lindenlab.com", "pdu2.lindenlab.com"])
         
+
