@@ -22,25 +22,31 @@ def set_dhcp_association(request, hostname, mac_address):
     hostname = hostname.lower()
     mac_address = mac_address.lower()
 
-    try:
-        server = clusto.get_by_mac(mac_address)[0]
-    except IndexError:
+    servers = clusto.get_by_mac(mac_address)
+    ipmi_hosts = clusto.get_entities(attrs=[{'subkey': 'ipmi_mac', 'value': mac_address}])
+    hosts = llclusto.get_by_hostname(hostname)
+    
+    if not servers and not ipmi_hosts:
         return HttpResponseInvalidState('Could not find any entities with MAC address: "%s".' % mac_address) 
     
-    hosts = llclusto.get_by_hostname(hostname)
 
     try:
         clusto.begin_transaction()
 
-        if hosts:
-            for host in hosts:
-                for (port_type, port_num, ignore, ignore) in host.port_info_tuples:
-                    if host.get_hostname(port_type, port_num) == hostname:
-                        host.del_hostname(port_type, port_num)
-
-        for (port_type, port_num, ignore, ignore) in server.port_info_tuples:
-            if server.get_port_attr(port_type, port_num, "mac") == mac_address:
-                server.set_hostname(hostname, port_type, port_num)
+        for host in hosts:
+            for (port_type, port_num, ignore, ignore) in host.port_info_tuples:
+                if host.get_hostname(port_type, port_num) == hostname:
+                    host.del_hostname(port_type, port_num)
+        
+        for server in servers:
+            for (port_type, port_num, ignore, ignore) in server.port_info_tuples:
+                if server.get_port_attr(port_type, port_num, "mac") == mac_address:
+                    server.set_hostname(hostname, port_type, port_num)
+        
+        for host in ipmi_hosts:
+            ipmi = host.ipmi
+            if ipmi[1] == mac_address:
+                host.set_ipmi_info(hostname, ipmi[1])
         
         clusto.commit()
     except:

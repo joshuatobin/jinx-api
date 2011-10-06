@@ -48,7 +48,8 @@ DATABASE_USER = jinx_global_settings['DB_JINXUSER']           # Not used with sq
 DATABASE_PASSWORD = jinx_global_settings['DB_JINXUSER_PWD']  # Not used with sqlite3.
 DATABASE_HOST = jinx_global_settings['DB_JINX_DATABASE_HOST']  # Set to empty string for localhost. Not used with sqlite3.
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
-DATABASE_OPTIONS = {"init_command": "SET storage_engine=INNODB",}
+if DATABASE_ENGINE == "mysql":
+    DATABASE_OPTIONS = {"init_command": "SET storage_engine=INNODB",}
 
 # ldap configuration settings. 
 

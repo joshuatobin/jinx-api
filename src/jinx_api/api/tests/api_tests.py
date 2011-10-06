@@ -10,58 +10,58 @@ import datetime
 # API middleware, not the real Jinx API call functions.
 
 urlpatterns = patterns('api.tests.api_tests',
-    (r'test_view_normal', 'test_view_normal'),
-    (r'test_view_exception', 'test_view_exception'),
-    (r'test_view_not_found', 'test_view_not_found_response'),
-    (r'test_view_echo', 'test_view_echo'),
-    (r'test_view_reverse_three_arguments', 'test_view_reverse_three_arguments'),
-    (r'test_view_one_default_argument', 'test_view_one_default_argument'),
-    (r'test_view_two_default_arguments', 'test_view_two_default_arguments'),
-    (r'test_doc', 'test_doc'),
-    (r'test_raise_bad_request', 'test_raise_bad_request'),
-    (r'test_raise_forbidden', 'test_raise_forbidden'),
-    (r'test_raise_data_not_found', 'test_raise_data_not_found'),
-    (r'test_raise_invalid_state', 'test_raise_invalid_state'),
+    (r'test_view_normal', '_test_view_normal'),
+    (r'test_view_exception', '_test_view_exception'),
+    (r'test_view_not_found', '_test_view_not_found_response'),
+    (r'test_view_echo', '_test_view_echo'),
+    (r'test_view_reverse_three_arguments', '_test_view_reverse_three_arguments'),
+    (r'test_view_one_default_argument', '_test_view_one_default_argument'),
+    (r'test_view_two_default_arguments', '_test_view_two_default_arguments'),
+    (r'test_doc', '_test_doc'),
+    (r'test_raise_bad_request', '_test_raise_bad_request'),
+    (r'test_raise_forbidden', '_test_raise_forbidden'),
+    (r'test_raise_data_not_found', '_test_raise_data_not_found'),
+    (r'test_raise_invalid_state', '_test_raise_invalid_state'),
 )
 
 
-def test_view_normal(request):
+def _test_view_normal(request):
     """Simply return a string to mimic a normally functioning view."""
     
     return "Hello, world!"
     
-def test_view_exception(request):
+def _test_view_exception(request):
     """Raise an exception to mimic a view with a bug."""
     
     # Raises AttributeError
     None.foo
 
-def test_view_not_found_response(request):
+def _test_view_not_found_response(request):
     """Return a 404 response to mimic requesting data that doesn't exist from an API call."""
     
     return HttpResponseNotFound("Not found.")
 
-def test_view_echo(request, *args):
+def _test_view_echo(request, *args):
     """Return a list with exactly the arguments sent to facillitate testing JSON layer."""
     
     return args
     
-def test_view_reverse_three_arguments(request, arg1, arg2, arg3):
+def _test_view_reverse_three_arguments(request, arg1, arg2, arg3):
     """Return a list with the three arguments in reverse order, to facillitate testing argument passing."""
     
     return [arg3, arg2, arg1]
     
-def test_view_one_default_argument(request, arg="default"):
+def _test_view_one_default_argument(request, arg="default"):
     """Return the argument passed to facillitate testing arguments with defaults."""
     
     return arg
     
-def test_view_two_default_arguments(request, arg1="default1", arg2="default2"):
+def _test_view_two_default_arguments(request, arg1="default1", arg2="default2"):
     """Return the arguments passed to facillitate testing keyword argumetns."""
     
     return [arg1, arg2]
     
-def test_doc(request, arg1, arg2=3):
+def _test_doc(request, arg1, arg2=3):
     """Test fetching of documentation strings.
     
     Note: This documentation string is used as part of the test.
@@ -71,16 +71,16 @@ def test_doc(request, arg1, arg2=3):
     
     pass
     
-def test_raise_bad_request(request):
+def _test_raise_bad_request(request):
     raise JinxInvalidRequestError()
 
-def test_raise_forbidden(request):
+def _test_raise_forbidden(request):
     raise JinxActionForbiddenError()
     
-def test_raise_data_not_found(request):
+def _test_raise_data_not_found(request):
     raise JinxDataNotFoundError()
     
-def test_raise_invalid_state(request):
+def _test_raise_invalid_state(request):
     raise JinxInvalidStateError()
 
 # Django's default 404 and 500 handlers want templates, 404.html and 500.html.
@@ -246,7 +246,7 @@ class JinxAPITests(TestCase):
     
     def test_doc(self):
         expected_documentation = \
-"""test_doc(arg1, arg2=3):
+"""_test_doc(arg1, arg2=3):
 Test fetching of documentation strings.
 
 Note: This documentation string is used as part of the test.
