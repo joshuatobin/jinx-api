@@ -142,6 +142,7 @@ TEMPLATE_DIRS = (
 )
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+#NOSE_ARGS = ['--all-modules']
 
 INSTALLED_APPS = (
     'jinx_api.api',

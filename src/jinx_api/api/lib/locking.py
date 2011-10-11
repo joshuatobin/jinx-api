@@ -16,7 +16,7 @@ def acquire_lock(lock):
         l.value += 1
         l.save()
     except ObjectDoesNotExist:
-        raise JinxDataNotFoundError("Error: Could not find lock: %s. Please use a lock that already exists." %s lock)
+        raise JinxDataNotFoundError("Error: Could not find lock: %s. Please use a lock that already exists." % lock)
         
     
     
